@@ -1,3 +1,6 @@
+Link do Jogo : https://calcquest-rpg.netlify.app/
+
+
 ⚔️ CalcQuest: Lendas de Algoritma
 
 CalcQuest é um experimento criativo que começou com uma simples ideia:
