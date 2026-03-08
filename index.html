@@ -1,0 +1,2941 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CalcQuest: Lendas de Algoritma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { brand: { 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c' } },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&family=Share+Tech+Mono&family=Fira+Code:wght@400;700&family=Cinzel:wght@700;900&family=Orbitron:wght@500;700;900&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.8s ease, background-image 0.8s ease;
+      overflow-x: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+      background-color: #09090b;
+    }
+
+    /* Interface Glassmorphism */
+    .glass-panel {
+      background: rgba(24, 24, 27, 0.65) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .btn-3d {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 6px 0 0 rgba(0, 0, 0, 0.6), 0 8px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(6px) !important;
+      box-shadow: 0 0px 0 0 rgba(0, 0, 0, 0.8), 0 0px 0px 0px rgba(0, 0, 0, 0.5) !important;
+      filter: brightness(1.2);
+    }
+
+    .btn-3d:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.8);
+      transform: translateY(6px);
+      box-shadow: none;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* --- Textos HUD --- */
+    .hud-text-bright {
+      color: #f4f4f5 !important;
+      text-shadow: 0px 2px 4px rgba(0, 0, 0, 1), 0px 0px 2px rgba(0, 0, 0, 1) !important;
+      font-weight: 900;
+    }
+
+    .hud-name-hero {
+      color: #60a5fa !important;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+    }
+
+    .hud-name-monster {
+      color: #fb7185 !important;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+    }
+
+    /* --- Efeitos de Dano, Loot & Combate --- */
+    @keyframes floatUpFade25D {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 15px, 20px) scale(0.5);
+      }
+
+      20% {
+        opacity: 1;
+        transform: translate3d(0, 0, 40px) scale(1.2);
+      }
+
+      80% {
+        opacity: 1;
+        transform: translate3d(0, -40px, 40px) scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate3d(0, -60px, 0) scale(0.8);
+      }
+    }
+
+    .dmg-popup {
+      position: absolute;
+      font-weight: 900;
+      font-size: 1.4rem;
+      pointer-events: none;
+      animation: floatUpFade25D 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      z-index: 100;
+      text-shadow: 0 3px 0 #000, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000, 0 8px 8px rgba(0, 0, 0, 0.8);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dmg-normal {
+      color: #fca5a5;
+    }
+
+    .dmg-crit {
+      color: #fde047;
+      font-size: 2.6rem;
+      filter: drop-shadow(0 0 20px #ca8a04);
+      z-index: 110;
+    }
+
+    .dmg-heal {
+      color: #6ee7b7;
+      filter: drop-shadow(0 0 10px #059669);
+      font-size: 1.6rem;
+    }
+
+    .dmg-player {
+      color: #ef4444;
+      font-size: 2rem;
+    }
+
+    .dmg-dodge {
+      color: #e5e7eb;
+      font-style: italic;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+    }
+
+    .dmg-parry {
+      color: #93c5fd;
+      font-style: italic;
+      font-size: 2rem;
+      font-weight: 900;
+      filter: drop-shadow(0 0 15px #2563eb);
+      letter-spacing: 2px;
+      z-index: 105;
+    }
+
+    .dmg-warning {
+      color: #fca5a5;
+      font-size: 1.8rem;
+      animation: pulseWarning 0.3s infinite alternate;
+    }
+
+    .dmg-effective {
+      color: #7dd3fc;
+      font-size: 2rem;
+      filter: drop-shadow(0 0 15px #0284c7);
+      font-style: italic;
+    }
+
+    .dmg-resistant {
+      color: #9ca3af;
+      font-size: 1.2rem;
+      opacity: 0.8;
+    }
+
+    .dmg-monster-dodge {
+      color: #9ca3af;
+      font-style: italic;
+      font-size: 1.2rem;
+      filter: drop-shadow(0 0 5px #4b5563);
+    }
+
+    .dmg-monster-block {
+      color: #60a5fa;
+      font-weight: 900;
+      font-size: 1.6rem;
+      filter: drop-shadow(0 0 10px #2563eb);
+    }
+
+    @keyframes pulseWarning {
+      0% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(1.3);
+        filter: drop-shadow(0 0 10px red);
+      }
+    }
+
+    /* --- Loot --- */
+    @keyframes lootExplosion {
+      0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 1;
+      }
+
+      50% {
+        transform: translate(var(--tx), -60px) scale(1.2);
+      }
+
+      100% {
+        transform: translate(var(--tx), 40px) scale(0.8);
+        opacity: 0;
+      }
+    }
+
+    .loot-coin {
+      position: absolute;
+      font-size: 1.5rem;
+      z-index: 70;
+      animation: lootExplosion 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.8));
+    }
+
+    /* --- Projéteis --- */
+    .magic-projectile {
+      position: absolute;
+      z-index: 75;
+      color: #c084fc;
+      width: 50px;
+      height: 50px;
+      animation: shootMagic 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      filter: drop-shadow(0 0 20px #a855f7) brightness(1.8);
+    }
+
+    @keyframes shootMagic {
+      0% {
+        left: 20%;
+        bottom: 30%;
+        transform: scale(0.5) rotate(0deg);
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 1;
+        transform: scale(1.5) rotate(45deg);
+      }
+
+      80% {
+        opacity: 1;
+        transform: scale(1.5) rotate(135deg);
+      }
+
+      100% {
+        left: 75%;
+        bottom: 30%;
+        transform: scale(2) rotate(180deg);
+        opacity: 0;
+      }
+    }
+
+    /* --- Auto Attack Glow --- */
+    .auto-atk-active {
+      animation: autoGlow 1.5s infinite alternate;
+      border-color: #3b82f6 !important;
+      color: #93c5fd !important;
+    }
+
+    @keyframes autoGlow {
+      0% {
+        box-shadow: 0 0 5px #2563eb;
+      }
+
+      100% {
+        box-shadow: 0 0 20px #3b82f6, inset 0 0 10px #3b82f6;
+      }
+    }
+
+    /* --- Dificuldade Buttons --- */
+    .diff-btn {
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+      opacity: 0.6;
+    }
+
+    .diff-btn.active {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+
+    .diff-easy.active {
+      border-color: #10b981;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .diff-normal.active {
+      border-color: #f59e0b;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .diff-hard.active {
+      border-color: #ef4444;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+
+    /* --- Arena 2.5D --- */
+    .arena-3d-container {
+      perspective: 800px;
+      transform-style: preserve-3d;
+      overflow: hidden;
+    }
+
+    .stage-floor {
+      position: absolute;
+      bottom: 5%;
+      left: 5%;
+      right: 5%;
+      height: 100px;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 70%);
+      transform: rotateX(65deg);
+      z-index: 10;
+      border-radius: 50%;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Fundos Dinâmicos */
+    .arena-bg-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      transition: all 1s ease;
+      opacity: 0.6;
+      mix-blend-mode: overlay;
+    }
+
+    .bg-arena-ruins {
+      background-image: radial-gradient(circle at top, #52525b, #18181b);
+    }
+
+    .bg-arena-swamp {
+      background-image: radial-gradient(circle at top, #064e3b, #022c22);
+      opacity: 0.8;
+    }
+
+    .bg-arena-forest {
+      background-image: radial-gradient(circle at center, #14532d, #022c22);
+      opacity: 0.85;
+    }
+
+    .bg-arena-cave {
+      background-image: radial-gradient(circle at center, #3730a3, #1e1b4b);
+      opacity: 0.8;
+    }
+
+    .bg-arena-volcano {
+      background-image: radial-gradient(circle at bottom, #b91c1c, #450a0a);
+      opacity: 0.9;
+    }
+
+    .bg-arena-astral {
+      background-image: radial-gradient(circle at top right, #6d28d9, #000000);
+      opacity: 0.9;
+    }
+
+    .bg-arena-underground {
+      background-image: linear-gradient(to top, #064e3b, #000000);
+      opacity: 0.9;
+      border-bottom: 2px solid #10b981;
+    }
+
+    .bg-arena-neon {
+      background-color: #050505;
+      background-image: linear-gradient(rgba(14, 165, 233, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(14, 165, 233, 0.15) 1px, transparent 1px);
+      background-size: 25px 25px;
+      transform: perspective(600px) rotateX(60deg) scale(2);
+      transform-origin: bottom center;
+      opacity: 0.8;
+      animation: neonScroll 10s linear infinite;
+    }
+
+    @keyframes neonScroll {
+      from {
+        background-position: 0 0;
+      }
+
+      to {
+        background-position: 0 25px;
+      }
+    }
+
+    .bg-arena-void {
+      background-image: radial-gradient(circle at center, #18181b, #000000);
+      opacity: 0.95;
+    }
+
+    .bg-arena-ultimate {
+      background-color: #050505;
+      background-image: radial-gradient(circle at center, rgba(217, 119, 6, 0.6), #000000);
+      opacity: 1;
+      animation: ultimatePulse 5s infinite alternate;
+    }
+
+    @keyframes ultimatePulse {
+      0% {
+        filter: brightness(1);
+      }
+
+      100% {
+        filter: brightness(1.5) hue-rotate(15deg);
+      }
+    }
+
+    .bg-arena-omniverse {
+      background-color: #000000;
+      background-image: radial-gradient(circle at top right, rgba(168, 85, 247, 0.4), transparent), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.3), transparent);
+      opacity: 1;
+      animation: omniverseShift 8s infinite alternate;
+    }
+
+    @keyframes omniverseShift {
+      0% {
+        filter: hue-rotate(0deg) brightness(1);
+      }
+
+      100% {
+        filter: hue-rotate(45deg) brightness(1.3);
+      }
+    }
+
+    .bg-arena-matrix {
+      background-color: #000000;
+      background-image: repeating-linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0, transparent 1px, transparent 20px);
+      opacity: 1;
+      border-top: 2px solid #059669;
+    }
+
+    .bg-arena-dev {
+      background-color: #0d1117;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: 1;
+      animation: gridPulse 4s ease infinite;
+    }
+
+    @keyframes gridPulse {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+      }
+
+      50% {
+        filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.3));
+      }
+    }
+
+    .bg-arena-hardware {
+      background-color: #1a0f00;
+      background-image: radial-gradient(circle at bottom right, #9a3412, transparent), radial-gradient(circle at top left, #ea580c, transparent);
+      opacity: 0.9;
+      border: 2px solid #f97316;
+      animation: hardwareHeat 3s infinite alternate;
+    }
+
+    @keyframes hardwareHeat {
+      0% {
+        opacity: 0.8;
+      }
+
+      100% {
+        opacity: 1;
+        filter: brightness(1.2);
+      }
+    }
+
+    .bg-arena-math {
+      background-color: #000000;
+      background-image: linear-gradient(rgba(251, 191, 36, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(251, 191, 36, 0.15) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform: perspective(800px) rotateX(75deg);
+      transform-origin: top center;
+      opacity: 1;
+      border-top: 2px solid #fbbf24;
+      animation: mathScroll 15s linear infinite;
+    }
+
+    @keyframes mathScroll {
+      from {
+        background-position: 0 0;
+      }
+
+      to {
+        background-position: 0 40px;
+      }
+    }
+
+    /* Sprites e Efeitos */
+    .sprite-container svg {
+      width: 80px;
+      height: 80px;
+      stroke-width: 1.5;
+      filter: drop-shadow(0 15px 10px rgba(0, 0, 0, 0.8));
+      transition: all 0.2s ease;
+    }
+
+    @keyframes idle {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-5px) scale(1.02);
+      }
+    }
+
+    .sprite-idle {
+      animation: idle 2s infinite ease-in-out;
+    }
+
+    @keyframes petFloat {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(-5deg);
+      }
+
+      50% {
+        transform: translateY(-15px) rotate(5deg);
+      }
+    }
+
+    .sprite-pet svg {
+      width: 40px;
+      height: 40px;
+      animation: petFloat 2.5s infinite ease-in-out;
+      filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.8));
+    }
+
+    .sprite-hit {
+      animation: hit 0.4s ease;
+      filter: brightness(2) drop-shadow(0 0 20px red) !important;
+    }
+
+    @keyframes hit {
+      0% {
+        transform: scale(1) translate3d(0, 0, 0);
+      }
+
+      25% {
+        transform: scale(0.9) translate3d(-10px, 0, -20px);
+      }
+
+      50% {
+        transform: scale(0.9) translate3d(10px, 0, -20px);
+      }
+
+      75% {
+        transform: scale(0.9) translate3d(-10px, 0, -20px);
+      }
+
+      100% {
+        transform: scale(1) translate3d(0, 0, 0);
+      }
+    }
+
+    .sprite-attack-hero {
+      animation: attackHero25D 0.35s ease;
+    }
+
+    @keyframes attackHero25D {
+
+      0%,
+      100% {
+        transform: translate3d(0, 0, 0) scale(1) scaleX(-1);
+      }
+
+      50% {
+        transform: translate3d(50px, -10px, 40px) scale(1.3) scaleX(-1);
+        filter: brightness(1.5) drop-shadow(0 20px 15px rgba(0, 0, 0, 0.6));
+      }
+    }
+
+    .sprite-attack-monster {
+      animation: attackMonster25D 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      z-index: 40 !important;
+    }
+
+    @keyframes attackMonster25D {
+
+      0%,
+      100% {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+
+      30% {
+        transform: translate3d(20px, -10px, -30px) scale(0.9);
+      }
+
+      60% {
+        transform: translate3d(-80px, 15px, 60px) scale(1.4);
+        filter: brightness(1.3) drop-shadow(0 30px 20px rgba(0, 0, 0, 0.8));
+      }
+    }
+
+    .monster-telegraphing svg {
+      animation: telegraphFlash 0.3s infinite;
+    }
+
+    @keyframes telegraphFlash {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 0 red);
+        transform: scale(1);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 25px red) brightness(1.8);
+        transform: scale(1.08);
+      }
+    }
+
+    .sprite-death {
+      animation: death 0.7s forwards;
+    }
+
+    @keyframes death {
+      0% {
+        transform: scale(1) translateZ(0);
+        opacity: 1;
+        filter: brightness(2);
+      }
+
+      100% {
+        transform: scale(0) rotate(180deg) translateZ(-100px);
+        opacity: 0;
+        filter: brightness(0);
+      }
+    }
+
+    .shake-screen {
+      animation: shake 0.3s cubic-bezier(.36, .07, .19, .97) both;
+    }
+
+    @keyframes shake {
+
+      10%,
+      90% {
+        transform: translate3d(-3px, 0, 0);
+      }
+
+      20%,
+      80% {
+        transform: translate3d(5px, 0, 0);
+      }
+
+      30%,
+      50%,
+      70% {
+        transform: translate3d(-8px, 0, 0);
+      }
+
+      40%,
+      60% {
+        transform: translate3d(8px, 0, 0);
+      }
+    }
+
+    .shake-heavy {
+      animation: shakeHeavy 0.5s cubic-bezier(.36, .07, .19, .97) both;
+    }
+
+    @keyframes shakeHeavy {
+
+      10%,
+      90% {
+        transform: translate3d(-6px, 6px, 0);
+      }
+
+      20%,
+      80% {
+        transform: translate3d(12px, -6px, 0);
+      }
+
+      30%,
+      50%,
+      70% {
+        transform: translate3d(-18px, 12px, 0);
+        filter: brightness(1.2);
+      }
+
+      40%,
+      60% {
+        transform: translate3d(18px, -12px, 0);
+      }
+    }
+
+    .flash-screen {
+      animation: flash 0.5s ease-out;
+    }
+
+    @keyframes flash {
+      0% {
+        background-color: rgba(255, 255, 255, 0.8);
+      }
+
+      100% {
+        background-color: transparent;
+      }
+    }
+
+    .shield-active svg {
+      filter: drop-shadow(0 0 30px #60a5fa) brightness(1.4) !important;
+      color: #93c5fd !important;
+      transform: scale(1.1);
+    }
+
+    .ultimate-ready {
+      animation: ultGlow 0.8s infinite alternate;
+      border-color: #fbbf24 !important;
+    }
+
+    .ultimate-ready span {
+      color: #fbbf24 !important;
+      text-shadow: 0 0 10px #f59e0b;
+    }
+
+    @keyframes ultGlow {
+      0% {
+        box-shadow: 0 0 15px #f59e0b, inset 0 0 15px #f59e0b;
+        transform: scale(1);
+      }
+
+      100% {
+        box-shadow: 0 0 30px #ef4444, inset 0 0 30px #ef4444;
+        transform: scale(1.03);
+      }
+    }
+
+    .combo-text-anim {
+      animation: comboPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes comboPop {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 100;
+    }
+
+    .modal-content {
+      transform: scale(0.9) translateY(20px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9);
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    .view-section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .view-section.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .dialogue-box {
+      background: rgba(9, 9, 11, 0.95);
+      border: 2px solid #7f1d1d;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(153, 27, 27, 0.4);
+      color: #e4e4e7;
+      font-family: 'Share Tech Mono', monospace;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .dialogue-box:active {
+      transform: scale(0.98);
+    }
+
+    /* --- TEMAS GLOBAIS DA APP --- */
+    body.theme-medieval .game-container,
+    body.theme-medieval .menu-container {
+      background: linear-gradient(145deg, rgba(39, 39, 42, 0.8) 0%, rgba(24, 24, 27, 0.9) 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-bottom: 4px solid #7f1d1d !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9) !important;
+    }
+
+    body.theme-nature .game-container,
+    body.theme-nature .menu-container {
+      background: linear-gradient(145deg, rgba(6, 78, 59, 0.8) 0%, rgba(2, 44, 34, 0.9) 100%) !important;
+      border: 1px solid rgba(16, 185, 129, 0.3) !important;
+      border-bottom: 4px solid #047857 !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9) !important;
+    }
+
+    body.theme-modern .game-container,
+    body.theme-modern .menu-container {
+      background: linear-gradient(145deg, rgba(49, 46, 129, 0.8) 0%, rgba(30, 27, 75, 0.9) 100%) !important;
+      border: 1px solid rgba(79, 70, 229, 0.3) !important;
+      border-bottom: 4px solid #4338ca !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9) !important;
+    }
+
+    body.theme-hell .game-container,
+    body.theme-hell .menu-container {
+      background: linear-gradient(145deg, rgba(127, 29, 29, 0.8) 0%, rgba(69, 10, 10, 0.9) 100%) !important;
+      border: 1px solid rgba(220, 38, 38, 0.3) !important;
+      border-bottom: 4px solid #b91c1c !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9) !important;
+    }
+
+    body.theme-cosmic .game-container,
+    body.theme-cosmic .menu-container {
+      background: linear-gradient(145deg, rgba(76, 29, 149, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%) !important;
+      border: 1px solid rgba(168, 85, 247, 0.3) !important;
+      border-bottom: 4px solid #7e22ce !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9) !important;
+    }
+
+    body.theme-cyber .game-container,
+    body.theme-cyber .menu-container {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(2, 6, 23, 0.95) 100%) !important;
+      border: 1px solid rgba(14, 165, 233, 0.4) !important;
+      border-bottom: 4px solid #0369a1 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 0 30px rgba(14, 165, 233, 0.3) !important;
+    }
+
+    body.theme-cyber .rpg-title {
+      font-family: 'Orbitron', sans-serif !important;
+      color: #38bdf8 !important;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.4) !important;
+      letter-spacing: 4px;
+    }
+
+    body.theme-ultimate .game-container,
+    body.theme-ultimate .menu-container {
+      background: linear-gradient(145deg, rgba(31, 21, 5, 0.85) 0%, rgba(10, 7, 1, 0.95) 100%) !important;
+      border: 1px solid rgba(251, 191, 36, 0.4) !important;
+      border-bottom: 4px solid #b45309 !important;
+      border-radius: 12px !important;
+      box-shadow: 0 0 40px rgba(251, 191, 36, 0.2) !important;
+    }
+
+    body.theme-ultimate .rpg-title {
+      font-family: 'Cinzel', serif !important;
+      color: #fde68a !important;
+      text-shadow: 0 0 15px rgba(251, 191, 36, 0.8), 0 0 30px rgba(251, 191, 36, 0.4) !important;
+      letter-spacing: 5px;
+    }
+
+    body.theme-omniverse .game-container,
+    body.theme-omniverse .menu-container {
+      background: linear-gradient(145deg, rgba(30, 16, 47, 0.85) 0%, rgba(9, 3, 20, 0.95) 100%) !important;
+      border: 1px solid rgba(216, 180, 254, 0.4) !important;
+      border-bottom: 4px solid #9333ea !important;
+      border-radius: 12px !important;
+      box-shadow: 0 0 50px rgba(168, 85, 247, 0.3) !important;
+    }
+
+    body.theme-omniverse .rpg-title {
+      font-family: 'Cinzel', serif !important;
+      color: #f3e8ff !important;
+      text-shadow: 0 0 15px rgba(216, 180, 254, 0.8), 0 0 30px rgba(216, 180, 254, 0.5) !important;
+      letter-spacing: 6px;
+    }
+
+    body.theme-matrix .game-container,
+    body.theme-matrix .menu-container {
+      background: linear-gradient(145deg, rgba(2, 44, 21, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%) !important;
+      border: 1px solid rgba(16, 185, 129, 0.5) !important;
+      border-bottom: 4px solid #047857 !important;
+      border-radius: 4px !important;
+      box-shadow: 0 0 40px rgba(16, 185, 129, 0.2) !important;
+    }
+
+    body.theme-matrix .rpg-title {
+      font-family: 'Share Tech Mono', monospace !important;
+      color: #34d399 !important;
+      text-shadow: 0 0 15px rgba(52, 211, 153, 0.8) !important;
+      letter-spacing: 2px;
+    }
+
+    body.theme-dev .game-container,
+    body.theme-dev .menu-container {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(0, 0, 0, 0.8) 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      border-bottom: 4px solid #e2e8f0 !important;
+      border-radius: 24px !important;
+      box-shadow: 0 0 60px rgba(255, 255, 255, 0.1) !important;
+    }
+
+    body.theme-dev .rpg-title {
+      font-family: 'Fira Code', monospace !important;
+      color: #f8fafc !important;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.6) !important;
+      letter-spacing: -1px;
+    }
+
+    body.theme-hardware .game-container,
+    body.theme-hardware .menu-container {
+      background: linear-gradient(145deg, rgba(67, 20, 7, 0.85) 0%, rgba(20, 5, 1, 0.95) 100%) !important;
+      border: 2px solid #ea580c !important;
+      border-bottom: 4px solid #9a3412 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 0 50px rgba(234, 88, 12, 0.3) !important;
+    }
+
+    body.theme-hardware .rpg-title {
+      font-family: 'Inter', sans-serif !important;
+      color: #fdba74 !important;
+      text-shadow: 0 0 15px rgba(234, 88, 12, 0.8) !important;
+      letter-spacing: 8px;
+      font-weight: 900;
+    }
+
+    body.theme-math .game-container,
+    body.theme-math .menu-container {
+      background: rgba(5, 5, 5, 0.95) !important;
+      border: 1px solid #fbbf24 !important;
+      border-radius: 0px !important;
+      box-shadow: 0 0 40px rgba(251, 191, 36, 0.15) !important;
+    }
+
+    body.theme-math .rpg-title {
+      font-family: 'Cinzel', serif !important;
+      color: #ffffff !important;
+      text-shadow: 0 0 20px #fbbf24 !important;
+      letter-spacing: 12px;
+      font-weight: 300;
+    }
+
+    .rpg-title {
+      color: #f4f4f5 !important;
+      font-family: 'Cinzel', serif !important;
+      text-shadow: 0 4px 6px rgba(0, 0, 0, 0.9) !important;
+      letter-spacing: 1px;
+    }
+
+    .stat-text {
+      color: #e4e4e7 !important;
+    }
+
+    .menu-stat-box {
+      background: rgba(0, 0, 0, 0.4) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .arena-box {
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: inset 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+    }
+  </style>
+</head>
+
+<body class="theme-medieval min-h-screen w-full flex flex-col items-center justify-center transition-colors duration-1000 bg-cover bg-center">
+
+  <div id="general-toast" class="fixed top-8 transform transition-all duration-500 hidden opacity-0 -translate-y-4 bg-zinc-900/90 backdrop-blur-md text-zinc-100 font-bold px-6 py-3 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.9)] border border-zinc-700 z-[200] text-center">
+    <span id="general-toast-text">Mensagem</span>
+  </div>
+
+  <section id="view-intro" class="view-section w-full max-w-md px-4 flex-col items-center justify-center h-screen relative">
+    <div class="text-center mb-10 w-full flex flex-col items-center">
+      <div id="intro-emoji" class="mb-8 sprite-idle"></div>
+      <div class="dialogue-box w-full max-w-[400px] p-6 relative text-left" onclick="rpg.nextIntro()">
+        <p id="intro-text" class="text-sm md:text-base leading-relaxed min-h-[120px] font-medium tracking-wide text-zinc-300"></p>
+        <div class="absolute bottom-3 right-4 text-xs font-black text-red-500 animate-pulse flex items-center gap-1">Avançar <i data-lucide="chevron-right" class="w-4 h-4"></i></div>
+      </div>
+      <button onclick="rpg.skipIntro()" class="mt-8 text-zinc-500 hover:text-zinc-300 font-bold underline text-xs tracking-widest uppercase">Saltar História</button>
+    </div>
+  </section>
+
+  <section id="view-menu" class="view-section w-full max-w-md px-4 flex-col items-center justify-center">
+    <div class="menu-container glass-panel w-full p-6 sm:p-8 text-center transition-all duration-500 relative overflow-hidden">
+
+      <div class="absolute top-4 right-4 flex gap-2">
+        <button onclick="openSettings()" class="p-2 rounded-lg bg-black/40 border border-white/10 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-lg" title="Configurações e Nuvem">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+        <button onclick="openChangelog()" class="p-2 rounded-lg bg-black/40 border border-white/10 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-lg" title="Notas da Atualização">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+        </button>
+        <button onclick="openBestiary()" class="p-2 rounded-lg bg-black/40 border border-white/10 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-lg" title="Bestiário">
+          <i data-lucide="book-open" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <h1 class="rpg-title text-4xl sm:text-5xl font-black mb-1 mt-6 text-white transition-all duration-500">CALCQUEST</h1>
+      <p class="text-[10px] font-bold text-zinc-400 mb-8 uppercase tracking-[0.2em] flex items-center justify-center gap-2" id="menu-era-badge">
+        <span class="h-[1px] w-6 bg-zinc-600"></span> Lendas de Algoritma <span class="h-[1px] w-6 bg-zinc-600"></span>
+      </p>
+
+      <div class="rounded-2xl p-4 mb-6 border border-white/5 bg-black/30 text-left shadow-inner">
+        <div class="flex items-center gap-4 mb-4">
+          <div id="menu-class-icon-container" class="w-14 h-14 rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-zinc-300 shadow-[0_4px_10px_rgba(0,0,0,0.8)] border border-zinc-600 relative overflow-hidden">
+            <i data-lucide="sword" class="w-7 h-7 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]"></i>
+          </div>
+          <div>
+            <h2 id="menu-hero-name" class="stat-text font-black text-lg uppercase tracking-wide">Herói</h2>
+            <p class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Lvl <span id="menu-level-text" class="text-red-400">1</span> • <span id="menu-class-text">Guerreiro</span></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <div class="menu-stat-box rounded-xl p-2.5 flex items-center gap-2">
+            <i data-lucide="coins" class="w-4 h-4 text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.4)]"></i>
+            <span id="menu-gold" class="stat-text text-sm">0</span>
+          </div>
+          <div class="menu-stat-box rounded-xl p-2.5 flex items-center gap-2">
+            <i data-lucide="flask-round" class="w-4 h-4 text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.4)]"></i>
+            <span id="menu-potions" class="stat-text text-sm">5</span>
+          </div>
+          <div class="menu-stat-box rounded-xl p-2.5 flex items-center gap-2">
+            <i data-lucide="swords" class="w-4 h-4 text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.4)]"></i>
+            <span id="menu-dmgt" class="stat-text text-sm">10 ATK</span>
+          </div>
+          <div class="menu-stat-box rounded-xl p-2.5 flex items-center gap-2">
+            <i data-lucide="heart" class="w-4 h-4 text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.4)]"></i>
+            <span id="menu-hp" class="stat-text text-sm">100 HP</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <button onclick="rpg.openPreBattle(false)" class="btn-3d w-full py-3.5 rounded-xl bg-gradient-to-r from-red-800 to-red-600 border border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-white font-black text-base uppercase tracking-widest flex items-center justify-center gap-2">
+          <i data-lucide="swords" class="w-5 h-5"></i> Entrar na Masmorra
+        </button>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="openShop()" class="btn-3d w-full py-2.5 rounded-xl bg-gradient-to-r from-yellow-700 to-yellow-600 border border-yellow-500 text-white font-bold uppercase text-xs flex items-center justify-center gap-2">
+            <i data-lucide="store" class="w-4 h-4"></i> Loja
+          </button>
+          <button onclick="openTavern()" class="btn-3d w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-800 to-amber-700 border border-amber-600 text-white font-bold uppercase text-xs flex items-center justify-center gap-2">
+            <i data-lucide="beer" class="w-4 h-4"></i> Taverna
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="openProfile()" class="btn-3d w-full py-2.5 rounded-xl bg-gradient-to-r from-zinc-700 to-zinc-600 border border-zinc-500 text-white font-bold uppercase text-xs flex items-center justify-center gap-2">
+            <i data-lucide="user" class="w-4 h-4"></i> Perfil
+          </button>
+          <button onclick="rpg.tryStartBossFight()" id="btn-daily-boss" class="btn-3d w-full py-2.5 rounded-xl bg-gradient-to-r from-red-950 to-red-900 border border-red-700 text-red-200 font-bold uppercase text-[10px] flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(153,27,27,0.8)] truncate px-2">
+            <i data-lucide="skull" class="w-4 h-4 text-red-500 flex-shrink-0"></i> <span id="btn-boss-text" class="truncate">Boss</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-pre-battle" class="view-section w-full px-4 flex-col items-center justify-center min-h-screen py-6 relative">
+    <div class="game-container glass-panel relative w-full max-w-[440px] rounded-3xl p-6 transition-all duration-500 mx-auto text-center border border-zinc-700">
+
+      <h2 id="pre-act-title" class="text-2xl font-black text-white mb-2 tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500">Ato X</h2>
+      <p id="pre-act-desc" class="text-xs text-zinc-400 mb-6 px-2">Descrição do ato atual.</p>
+
+      <div class="bg-black/50 border border-zinc-800 rounded-xl p-4 mb-6 shadow-inner relative">
+        <i data-lucide="quote" class="w-6 h-6 text-zinc-700 absolute -top-3 -left-2 bg-black rounded-full p-1"></i>
+        <p id="pre-villain-quote" class="text-sm font-bold text-zinc-200 italic">"Frase dramática do vilão vai aparecer aqui para meter medo."</p>
+      </div>
+
+      <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Seleciona a Dificuldade</h3>
+      <div class="flex gap-2 justify-center mb-8">
+        <button onclick="rpg.selectDifficulty('easy')" id="btn-diff-easy" class="diff-btn flex-1 py-2 bg-emerald-950/50 border-emerald-800 text-emerald-400 rounded-lg text-xs font-bold shadow">Fácil<br><span class="text-[9px] font-normal text-emerald-600">-30% Stats</span></button>
+        <button onclick="rpg.selectDifficulty('normal')" id="btn-diff-normal" class="diff-btn active flex-1 py-2 bg-yellow-950/50 border-yellow-800 text-yellow-400 rounded-lg text-xs font-bold shadow border-yellow-500">Normal<br><span class="text-[9px] font-normal text-yellow-600">Padrão</span></button>
+        <button onclick="rpg.selectDifficulty('hard')" id="btn-diff-hard" class="diff-btn flex-1 py-2 bg-red-950/50 border-red-800 text-red-400 rounded-lg text-xs font-bold shadow">Difícil<br><span class="text-[9px] font-normal text-red-600">+50% Stats/Loot</span></button>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="navTo('menu')" class="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-bold transition">Voltar</button>
+        <button onclick="rpg.confirmBattle()" class="flex-1 py-3 bg-gradient-to-r from-red-700 to-red-600 text-white rounded-xl text-sm font-black shadow-[0_0_15px_rgba(220,38,38,0.5)] flex items-center justify-center gap-2">LUTAR! <i data-lucide="swords" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-battle" class="view-section w-full px-2 sm:px-4 flex-col items-center justify-center min-h-screen py-6 relative">
+    <div id="flash-overlay" class="fixed inset-0 pointer-events-none z-50"></div>
+
+    <div id="level-up-toast" class="fixed top-12 transform transition-all duration-500 hidden opacity-0 -translate-y-4 bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-black px-8 py-4 rounded-xl shadow-[0_10px_30px_rgba(245,158,11,0.6)] border border-yellow-300 z-[100] text-center uppercase tracking-widest">
+      <span class="block text-[10px] opacity-90 mb-1">Poder Aumentado!</span>
+      <span id="toast-level-text" class="text-3xl drop-shadow-md">Nível 2 🎉</span>
+    </div>
+
+    <div id="game-container" class="game-container glass-panel relative w-full max-w-[440px] rounded-3xl p-4 sm:p-5 transition-all duration-500 z-10 mx-auto">
+
+      <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/10">
+        <button onclick="rpg.flee()" class="px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 text-zinc-300 hover:bg-red-950 hover:text-red-400 hover:border-red-800 transition-colors flex items-center gap-2 text-xs font-bold shadow-md uppercase">
+          <i data-lucide="arrow-left" class="w-3 h-3"></i> Fugir
+        </button>
+        <div class="flex gap-2">
+          <button onclick="rpg.toggleAutoAttack()" id="btn-auto-atk" class="px-3 py-1.5 bg-black/40 rounded-lg text-zinc-400 shadow-inner border border-white/10 text-xs font-bold flex items-center gap-1.5 hover:text-white transition">
+            <i data-lucide="zap" class="w-3 h-3"></i> Auto
+          </button>
+          <div class="flex items-center gap-1.5 px-3 py-1.5 bg-black/40 rounded-lg text-yellow-500 shadow-inner border border-white/10 text-xs font-bold">
+            <i data-lucide="coins" class="w-3 h-3"></i> <span id="battle-gold-display">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="arena-container" class="arena-box arena-3d-container mb-4 p-3 flex flex-col justify-between relative min-h-[250px] overflow-hidden rounded-xl">
+        <div id="arena-bg-layer" class="arena-bg-layer bg-arena-ruins"></div>
+        <div id="boss-warning" class="hidden absolute top-0 left-0 w-full bg-red-700 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 z-20 animate-pulse shadow-md">Aviso: Guardião do Ato</div>
+        <div class="stage-floor"></div>
+
+        <div class="flex justify-between items-start w-full z-20 bg-black/40 p-3 rounded-lg backdrop-blur-md border border-white/5 shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+          <div class="w-[45%]">
+            <div class="flex justify-between items-end mb-1.5">
+              <span class="text-xs hud-text-bright hud-name-hero truncate" id="battle-hero-name">Herói</span>
+              <span class="text-[10px] text-zinc-300 font-bold" id="battle-hero-lvl">Lvl 1</span>
+            </div>
+            <div class="w-full bg-zinc-900 rounded-full h-3 border border-zinc-700 relative overflow-hidden shadow-inner">
+              <div id="hero-hp-bar" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+            <div class="w-full bg-zinc-950 rounded-full h-1.5 mt-1 overflow-hidden border border-zinc-800">
+              <div id="hero-fury-bar" class="bg-gradient-to-r from-orange-600 to-yellow-500 h-full transition-all duration-300" style="width: 0%; box-shadow: 0 0 5px orange;"></div>
+            </div>
+            <div id="hero-hp-text" class="text-[10px] font-black text-zinc-300 mt-1">100 / 100</div>
+          </div>
+
+          <div class="flex flex-col items-center justify-start mt-2">
+            <div class="text-[9px] font-black text-zinc-400 bg-black/80 px-2 py-0.5 rounded shadow-inner border border-zinc-800">VS</div>
+          </div>
+
+          <div class="w-[45%] text-right">
+            <div class="flex justify-between items-end mb-1.5 flex-row-reverse">
+              <span id="monster-name" class="text-xs hud-text-bright hud-name-monster truncate">Slime</span>
+              <span id="monster-lvl" class="text-[10px] text-zinc-300 font-bold">Lvl 1</span>
+            </div>
+            <div class="w-full bg-zinc-900 rounded-full h-3 border border-zinc-700 relative overflow-hidden flex justify-end shadow-inner">
+              <div id="monster-hp-bar" class="bg-gradient-to-l from-red-700 to-red-500 h-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+            <div class="w-full bg-zinc-950 rounded-full h-1.5 mt-1 overflow-hidden border border-zinc-800 shadow-inner flex justify-end">
+              <div id="monster-atb-bar" class="bg-cyan-500 h-full shadow-[0_0_5px_cyan]" style="width: 0%"></div>
+            </div>
+            <div id="monster-hp-text" class="text-[10px] font-black text-zinc-300 mt-1">100 / 100</div>
+          </div>
+        </div>
+
+        <div id="combo-display" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-lg font-black text-amber-400 italic opacity-0 transition-opacity z-40 text-center pointer-events-none" style="text-shadow: 0 2px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 5px 10px rgba(0,0,0,0.8);">
+          <span id="combo-count" class="text-4xl text-white">2</span><br>HITS
+        </div>
+
+        <div class="flex justify-between items-end w-full px-4 mt-8 z-20 relative h-28">
+          <div class="relative flex items-end">
+            <div id="pet-sprite-container" class="absolute -left-6 bottom-8 text-purple-400 sprite-pet z-30"></div>
+            <div id="hero-sprite-container" class="sprite-container transform scale-x-[-1] text-blue-400 sprite-idle z-20"></div>
+          </div>
+          <div id="damage-zone" class="absolute inset-0 pointer-events-none z-50"></div>
+          <div id="monster-sprite-container" class="sprite-container sprite-idle z-20"></div>
+        </div>
+      </div>
+
+      <div class="flex justify-between text-[9px] font-bold text-zinc-400 mb-1 px-1 uppercase tracking-wider">
+        <span>Experiência</span>
+        <span id="battle-xp-text">0 / 100</span>
+      </div>
+      <div class="w-full bg-black/50 rounded-full h-1.5 mb-5 overflow-hidden shadow-inner border border-white/10">
+        <div id="battle-xp-bar" class="bg-blue-600 h-full transition-all duration-500 shadow-[0_0_10px_rgba(37,99,235,0.8)]" style="width: 0%"></div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 sm:gap-4">
+        <button id="btn-atk" onclick="rpg.useSkill('atk')" class="btn-3d relative overflow-hidden p-3 rounded-xl bg-gradient-to-b from-red-700 to-red-900 text-white font-black uppercase tracking-wider text-xs shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center border border-red-500 h-16">
+          <i data-lucide="sword" class="w-5 h-5 mb-1 drop-shadow-md"></i>
+          <span id="atk-btn-text">Atacar</span>
+          <div id="cd-atk" class="cooldown-bar absolute bottom-0 left-0 h-1 bg-white/70 w-0"></div>
+        </button>
+
+        <button id="btn-mag" onclick="rpg.useSkill('mag')" class="btn-3d relative overflow-hidden p-3 rounded-xl bg-gradient-to-b from-purple-700 to-purple-900 text-white font-black uppercase tracking-wider text-xs shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center border border-purple-500 h-16">
+          <i data-lucide="flame" class="w-5 h-5 mb-1 drop-shadow-md"></i>
+          <span>Magia</span>
+          <div id="cd-mag" class="cooldown-bar absolute bottom-0 left-0 h-1 bg-white/70 w-0"></div>
+        </button>
+
+        <button id="btn-def" onclick="rpg.useSkill('def')" class="btn-3d relative overflow-hidden p-3 rounded-xl bg-gradient-to-b from-blue-700 to-blue-900 text-white font-black uppercase tracking-wider text-xs shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center border border-blue-500 h-16">
+          <i data-lucide="shield" class="w-5 h-5 mb-1 drop-shadow-md"></i>
+          <span>Defender</span>
+          <div id="cd-def" class="cooldown-bar absolute bottom-0 left-0 h-1 bg-white/70 w-0"></div>
+        </button>
+
+        <button id="btn-heal" onclick="rpg.useSkill('heal')" class="btn-3d relative overflow-hidden p-3 rounded-xl bg-gradient-to-b from-emerald-700 to-emerald-900 text-white font-black uppercase tracking-wider text-xs shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center border border-emerald-500 h-16">
+          <div class="absolute top-1 right-1 bg-black/80 border border-emerald-500 rounded-lg px-1.5 py-0.5 text-[9px]" id="btn-potion-count">0</div>
+          <i data-lucide="flask-round" class="w-5 h-5 mb-1 drop-shadow-md"></i>
+          <span>Curar</span>
+          <div id="cd-heal" class="cooldown-bar absolute bottom-0 left-0 h-1 bg-white/70 w-0"></div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div id="shop-modal" class="modal-overlay fixed inset-0 flex items-center justify-center">
+    <div class="modal-content glass-panel bg-zinc-900/90 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+          <i data-lucide="store" class="w-6 h-6 text-yellow-500"></i> Armazém
+        </h2>
+        <button onclick="closeModal('shop-modal')" class="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition text-zinc-400">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="bg-zinc-950/80 rounded-xl p-3 mb-4 flex justify-between items-center border border-zinc-800 shadow-inner">
+        <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Ouro Disponível</span>
+        <span class="text-lg font-black text-yellow-500 flex items-center gap-1"><i data-lucide="coins" class="w-4 h-4"></i> <span id="shop-gold">0</span></span>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-2 mb-4 bg-zinc-950/80 p-2 rounded-xl border border-zinc-800">
+        <button onclick="rpg.setShopTab('weapon')" id="tab-weapon" class="px-2 py-1.5 text-[10px] sm:text-xs font-bold bg-zinc-700 text-white rounded-lg shadow transition-all whitespace-nowrap">Armas</button>
+        <button onclick="rpg.setShopTab('armor')" id="tab-armor" class="px-2 py-1.5 text-[10px] sm:text-xs font-bold text-zinc-500 rounded-lg hover:bg-zinc-800 hover:text-zinc-300 transition-all whitespace-nowrap">Defesa</button>
+        <button onclick="rpg.setShopTab('pet')" id="tab-pet" class="px-2 py-1.5 text-[10px] sm:text-xs font-bold text-zinc-500 rounded-lg hover:bg-zinc-800 hover:text-zinc-300 transition-all whitespace-nowrap">Pets</button>
+        <button onclick="rpg.setShopTab('relic')" id="tab-relic" class="px-2 py-1.5 text-[10px] sm:text-xs font-bold text-zinc-500 rounded-lg hover:bg-zinc-800 hover:text-zinc-300 transition-all whitespace-nowrap text-amber-500"><i data-lucide="gem" class="w-3 h-3 inline"></i> Relíquias</button>
+        <button onclick="rpg.setShopTab('items')" id="tab-items" class="px-2 py-1.5 text-[10px] sm:text-xs font-bold text-zinc-500 rounded-lg hover:bg-zinc-800 hover:text-zinc-300 transition-all whitespace-nowrap text-emerald-500">Poções</button>
+        <button onclick="rpg.setShopTab('theme')" id="tab-theme" class="px-2 py-1.5 text-[10px] sm:text-xs font-bold text-zinc-500 rounded-lg hover:bg-zinc-800 hover:text-zinc-300 transition-all whitespace-nowrap">Portais</button>
+      </div>
+
+      <div id="shop-items" class="space-y-2 max-h-[40vh] overflow-y-auto pr-1 pb-2 hide-scrollbar"></div>
+    </div>
+  </div>
+
+  <div id="tavern-modal" class="modal-overlay fixed inset-0 flex items-center justify-center">
+    <div class="modal-content glass-panel bg-zinc-900/90 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+          <i data-lucide="beer" class="w-6 h-6 text-amber-600"></i> Taverna
+        </h2>
+        <button onclick="closeModal('tavern-modal')" class="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition text-zinc-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-xs text-zinc-400 mb-4 text-center italic">"Descansa, lenda. Que manto vais envergar hoje?"</p>
+      <div id="classes-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pb-2 pr-1 hide-scrollbar"></div>
+    </div>
+  </div>
+
+  <div id="profile-modal" class="modal-overlay fixed inset-0 flex items-center justify-center">
+    <div class="modal-content glass-panel bg-zinc-900/90 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+          <i data-lucide="user" class="w-6 h-6 text-zinc-400"></i> Legado
+        </h2>
+        <button onclick="closeModal('profile-modal')" class="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition text-zinc-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 pb-2 hide-scrollbar">
+        <div>
+          <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Identidade</label>
+          <div class="flex gap-2">
+            <input type="text" id="profile-name-input" class="w-full bg-zinc-950/80 border border-zinc-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500" placeholder="Nome...">
+            <button onclick="saveProfile()" class="bg-zinc-700 text-white px-3 py-2 rounded-lg font-bold text-sm hover:bg-zinc-600 transition">Salvar</button>
+          </div>
+        </div>
+
+        <div class="bg-zinc-950/80 rounded-xl p-3 border border-zinc-800 grid grid-cols-2 gap-2 shadow-inner">
+          <div class="col-span-2">
+            <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Armorial</h3>
+          </div>
+          <div id="equip-weapon-display" class="bg-zinc-900 p-2 rounded-lg border border-zinc-700 text-center shadow-sm"></div>
+          <div id="equip-armor-display" class="bg-zinc-900 p-2 rounded-lg border border-zinc-700 text-center shadow-sm"></div>
+          <div id="equip-pet-display" class="bg-zinc-900 p-2 rounded-lg border border-zinc-700 text-center col-span-2 shadow-sm"></div>
+        </div>
+
+        <div class="bg-zinc-950/80 rounded-xl p-4 border border-zinc-800 shadow-inner">
+          <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> Registos</h3>
+          <ul class="text-sm space-y-3 text-zinc-300 font-medium">
+            <li class="flex justify-between border-b border-zinc-800 pb-1.5"><span>Poder Máximo (Lvl):</span> <span id="stat-level" class="font-black text-blue-400">1</span></li>
+            <li class="flex justify-between border-b border-zinc-800 pb-1.5"><span>Maior Dano Causado:</span> <span id="stat-max-dmg" class="font-black text-red-500">0</span></li>
+            <li class="flex justify-between border-b border-zinc-800 pb-1.5"><span>Abates Comuns:</span> <span id="stat-kills" class="font-black text-white">0</span></li>
+            <li class="flex justify-between"><span>Guardiões Aniquilados:</span> <span id="stat-bosses" class="font-black text-yellow-500">0</span></li>
+          </ul>
+        </div>
+
+        <div class="bg-zinc-950/80 rounded-xl p-3 border border-zinc-800 shadow-inner mt-2">
+          <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1"><i data-lucide="scroll" class="w-3 h-3"></i> Memórias da Campanha</h3>
+          <div id="campaign-list" class="flex flex-col gap-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bestiary-modal" class="modal-overlay fixed inset-0 flex items-center justify-center">
+    <div class="modal-content glass-panel bg-zinc-900/90 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+          <i data-lucide="book-open" class="w-6 h-6 text-zinc-400"></i> Bestiário
+        </h2>
+        <button onclick="closeModal('bestiary-modal')" class="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition text-zinc-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="bestiary-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1 pb-2 hide-scrollbar"></div>
+    </div>
+  </div>
+
+  <div id="settings-modal" class="modal-overlay fixed inset-0 flex items-center justify-center">
+    <div class="modal-content glass-panel bg-zinc-900/90 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+          <i data-lucide="settings" class="w-6 h-6 text-zinc-400"></i> Sistema
+        </h2>
+        <button onclick="closeModal('settings-modal')" class="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition text-zinc-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 text-sm text-zinc-300">
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-blue-500/30 shadow-inner">
+          <h3 class="font-bold text-blue-400 mb-2 flex items-center gap-2"><i data-lucide="cloud" class="w-4 h-4"></i> Nuvem Local (Backup)</h3>
+          <p class="text-xs text-zinc-400 mb-3">Gera um código do teu progresso para jogares noutro dispositivo.</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="rpg.exportSave()" class="py-2.5 bg-blue-900/50 hover:bg-blue-800/60 text-blue-300 rounded-lg font-bold transition flex items-center justify-center gap-2 border border-blue-700/50"><i data-lucide="upload" class="w-4 h-4"></i> Exportar</button>
+            <button onclick="rpg.importSave()" class="py-2.5 bg-emerald-900/50 hover:bg-emerald-800/60 text-emerald-300 rounded-lg font-bold transition flex items-center justify-center gap-2 border border-emerald-700/50"><i data-lucide="download" class="w-4 h-4"></i> Importar</button>
+          </div>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-red-900/50 shadow-inner mt-4">
+          <h3 class="font-bold text-red-500 mb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Zona de Perigo</h3>
+          <p class="text-xs text-zinc-500 mb-3">Isto irá destruir completamente a tua existência digital.</p>
+          <button onclick="rpg.resetProgress()" class="w-full py-2.5 bg-red-950/60 hover:bg-red-900 text-red-400 rounded-lg font-bold transition flex items-center justify-center gap-2 border border-red-800/50"><i data-lucide="trash-2" class="w-4 h-4"></i> Formatar Sistema (Apagar Save)</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="changelog-modal" class="modal-overlay fixed inset-0 flex items-center justify-center">
+    <div class="modal-content glass-panel bg-zinc-900/90 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+          <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i> Changelog
+        </h2>
+        <button onclick="closeModal('changelog-modal')" class="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition text-zinc-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 pb-2 hide-scrollbar text-sm text-zinc-300">
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)] relative overflow-hidden">
+          <h3 class="font-black text-red-400 text-lg mb-1 flex items-center gap-2">v9.0 - O Despertar Estratégico</h3>
+          <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-3 block">NOVAS MECÂNICAS & DIFICULDADE</span>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li><strong class="text-red-300">Inteligência Inimiga:</strong> Os monstros agora têm chance de se <i>Esquivar</i> e <i>Bloquear</i> (mitigando 60% do dano). Cuidado com os Guardiões!</li>
+            <li><strong class="text-red-300">Fases & Dificuldade:</strong> Antes de combateres, escolhe o risco: Fácil, Normal ou <b>Difícil</b> (+50% HP/Dano e +50% Recompensas).</li>
+            <li><strong class="text-red-300">Imersão de História:</strong> A sala de Preparação agora conta-te o resumo do teu Ato atual e exibe frases dramáticas exclusivas do Boss que vais enfrentar.</li>
+            <li><strong class="text-red-300">Correção Crítica:</strong> As funções de Save na Nuvem (Exportar/Importar) foram corrigidas para funcionarem sem falhas!</li>
+          </ul>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-sky-400/50 shadow-inner relative overflow-hidden">
+          <h3 class="font-black text-sky-300 text-lg mb-1 flex items-center gap-2">v8.0 - A Era da Conveniência</h3>
+          <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-3 block">CLOUD SAVE & LOOT</span>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li>Cloud Save (Export/Import) no menu Configurações.</li>
+            <li>Auto-Batalha adicionada à arena.</li>
+            <li>Monstros normais agora dropam poções.</li>
+            <li>Suporte para Quadriliões (Qa) e Quintiliões (Qi).</li>
+          </ul>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-yellow-400/50 shadow-inner relative overflow-hidden">
+          <h3 class="font-black text-yellow-300 text-lg mb-1 flex items-center gap-2">v7.0 - Paradoxo Matemático</h3>
+          <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-3 block">DLC #7 & ENDGAME ABSOLUTO</span>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li>A Equação Final: Luta contra a Divisão por Zero no Lvl 800+.</li>
+            <li>O Teorema: Nova vocação suprema e equipamentos de matemática pura.</li>
+          </ul>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-orange-500/50 shadow-inner relative overflow-hidden">
+          <h3 class="font-black text-orange-400 text-lg mb-1 flex items-center gap-2">v6.0 - A Fuga do Hardware</h3>
+          <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-3 block">DLC #6 (Mundo Físico)</span>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li>Escapa do software e espalha-te pela Placa-Mãe. Derrota a "Motherboard".</li>
+          </ul>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-white/30 shadow-inner">
+          <h3 class="font-black text-white text-lg mb-1 flex items-center gap-2">v5.5 - O Grande Ajuste</h3>
+          <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-3 block">DLC #5 & STAT SQUISH</span>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li>Stat Squish (Compressão): Valores da casa dos Biliões re-escalados.</li>
+            <li>DLC5 (O Além-Ecrã): O Herói confronta o Programador Cansado.</li>
+          </ul>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-emerald-500/50 shadow-inner">
+          <h3 class="font-black text-emerald-400 text-lg mb-1 flex items-center gap-2">v5.0 - A Realidade Base</h3>
+          <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3 block">DLC #4 (A Matriz)</span>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li>A história avança para o Código Fonte. Nova classe "Admin do Sistema".</li>
+          </ul>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-zinc-700/50 shadow-inner">
+          <h3 class="font-black text-zinc-400 text-lg mb-1 flex items-center gap-2">v4.5 - Progresso Linear</h3>
+          <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3 block">Fim dos Limites Diários</span>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-rose-500/50 shadow-inner">
+          <h3 class="font-black text-rose-400 text-lg mb-1 flex items-center gap-2">v4.4 - Guardiões da História</h3>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-indigo-500/50 shadow-inner">
+          <h3 class="font-black text-indigo-400 text-lg mb-1 flex items-center gap-2">v4.2 a v4.0 - A Singularidade</h3>
+        </div>
+
+        <div class="bg-zinc-950/80 p-4 rounded-xl border border-zinc-800 shadow-inner">
+          <h3 class="font-black text-zinc-400 text-lg mb-1">v3.3 a v1.0 - A Era de Ouro</h3>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    function formatNumber(num) {
+      if (num === null || num === undefined) return 0;
+      if (num >= 1e18) return (num / 1e18).toFixed(1).replace(/\.0$/, '') + 'Qi';
+      if (num >= 1e15) return (num / 1e15).toFixed(1).replace(/\.0$/, '') + 'Qa';
+      if (num >= 1e12) return (num / 1e12).toFixed(1).replace(/\.0$/, '') + 'T';
+      if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+      if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+      if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+      return num;
+    }
+
+    function showToast(msg, duration = 3000) {
+      const toast = document.getElementById('general-toast');
+      document.getElementById('general-toast-text').innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.remove('opacity-0', '-translate-y-4'), 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-4');
+        setTimeout(() => toast.classList.add('hidden'), 500);
+      }, duration);
+    }
+
+    function navTo(view, isBossFight = false) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(`view-${view}`).classList.add('active');
+
+      if (view === 'battle') {
+        // startBattle é chamado depois do ecrã de preparação
+      } else if (view === 'menu') {
+        rpg.endBattle();
+      }
+      rpg.updateUI();
+    }
+
+    function openShop() { rpg.renderShop(); document.getElementById('shop-modal').classList.add('active'); }
+    function openProfile() { document.getElementById('profile-name-input').value = rpg.heroName; rpg.updateProfileStats(); document.getElementById('profile-modal').classList.add('active'); }
+    function openBestiary() { rpg.renderBestiary(); document.getElementById('bestiary-modal').classList.add('active'); }
+    function openTavern() { rpg.renderTavern(); document.getElementById('tavern-modal').classList.add('active'); }
+    function openChangelog() { document.getElementById('changelog-modal').classList.add('active'); }
+    function openSettings() { document.getElementById('settings-modal').classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function saveProfile() {
+      const newName = document.getElementById('profile-name-input').value.trim();
+      if (newName) { rpg.heroName = newName; rpg.save(); rpg.updateUI(); showToast("Perfil guardado!"); closeModal('profile-modal'); }
+    }
+
+    const rpg = {
+      heroName: localStorage.getItem('calc_hero') || 'Guerreiro Lógico',
+      level: parseInt(localStorage.getItem('calc_level')) || 1,
+      xp: parseInt(localStorage.getItem('calc_xp')) || 0,
+      gold: parseInt(localStorage.getItem('calc_gold')) || 0,
+      potions: parseInt(localStorage.getItem('calc_potions')) || 5,
+
+      kills: parseInt(localStorage.getItem('calc_kills')) || 0,
+      bossKills: parseInt(localStorage.getItem('calc_bosses')) || 0,
+      highestLevel: parseInt(localStorage.getItem('calc_high_lvl')) || 1,
+      maxDmgDealt: parseInt(localStorage.getItem('calc_max_dmg')) || 0,
+
+      eqClass: localStorage.getItem('rpg_class') || 'warrior',
+      eqWeapon: localStorage.getItem('rpg_weapon') || 'w_fist',
+      eqArmor: localStorage.getItem('rpg_armor') || 'a_rags',
+      eqPet: localStorage.getItem('rpg_pet') || 'p_none',
+      eqTheme: localStorage.getItem('rpg_theme') || 't_ruins',
+
+      inventory: JSON.parse(localStorage.getItem('rpg_inv')) || ['w_fist', 'a_rags', 'p_none', 't_ruins'],
+      bestiary: JSON.parse(localStorage.getItem('rpg_bestiary')) || {},
+      seenMilestones: JSON.parse(localStorage.getItem('rpg_milestones')) || [],
+
+      introSeen: localStorage.getItem('calc_intro_seen') === 'true',
+
+      inCombat: false,
+      heroHp: 100,
+      monster: null,
+      isBossFight: false,
+      combatFrame: null,
+      lastTime: 0,
+      monsterAtb: 0,
+      isDefending: false,
+      fury: 0,
+      combo: 0,
+      autoAttack: false,
+      difficulty: 'normal',
+      diffMult: { hp: 1, dmg: 1, reward: 1, dodge: 1 },
+
+      activeChapter: 'intro',
+
+      save: function () {
+        localStorage.setItem('calc_hero', this.heroName);
+        localStorage.setItem('calc_level', this.level);
+        localStorage.setItem('calc_xp', this.xp);
+        localStorage.setItem('calc_gold', this.gold);
+        localStorage.setItem('calc_potions', this.potions);
+        localStorage.setItem('calc_kills', this.kills);
+        localStorage.setItem('calc_bosses', this.bossKills);
+        localStorage.setItem('calc_high_lvl', this.highestLevel);
+        localStorage.setItem('calc_max_dmg', this.maxDmgDealt);
+        localStorage.setItem('rpg_class', this.eqClass);
+        localStorage.setItem('rpg_weapon', this.eqWeapon);
+        localStorage.setItem('rpg_armor', this.eqArmor);
+        localStorage.setItem('rpg_pet', this.eqPet);
+        localStorage.setItem('rpg_theme', this.eqTheme);
+        localStorage.setItem('rpg_inv', JSON.stringify(this.inventory));
+        localStorage.setItem('rpg_bestiary', JSON.stringify(this.bestiary));
+        localStorage.setItem('rpg_milestones', JSON.stringify(this.seenMilestones));
+        localStorage.setItem('calc_intro_seen', this.introSeen);
+      },
+
+      exportSave: function () {
+        const data = {
+          heroName: this.heroName, level: this.level, xp: this.xp, gold: this.gold,
+          potions: this.potions, kills: this.kills, bossKills: this.bossKills,
+          highestLevel: this.highestLevel, maxDmgDealt: this.maxDmgDealt,
+          eqClass: this.eqClass, eqWeapon: this.eqWeapon, eqArmor: this.eqArmor,
+          eqPet: this.eqPet, eqTheme: this.eqTheme, inventory: this.inventory,
+          bestiary: this.bestiary, seenMilestones: this.seenMilestones,
+          introSeen: this.introSeen
+        };
+        const saveString = btoa(JSON.stringify(data));
+        navigator.clipboard.writeText(saveString).then(() => {
+          showToast("Código guardado na tua Área de Transferência!");
+        }).catch(() => {
+          prompt("Falha ao copiar. Copia o código manualmente:", saveString);
+        });
+      },
+
+      importSave: function () {
+        const saveString = prompt("Cola o teu código de Backup (Nuvem):");
+        if (!saveString) return;
+        try {
+          const data = JSON.parse(atob(saveString));
+          if (data && data.level) {
+            localStorage.setItem('calc_hero', data.heroName);
+            localStorage.setItem('calc_level', data.level);
+            localStorage.setItem('calc_xp', data.xp);
+            localStorage.setItem('calc_gold', data.gold);
+            localStorage.setItem('calc_potions', data.potions);
+            localStorage.setItem('calc_kills', data.kills);
+            localStorage.setItem('calc_bosses', data.bossKills);
+            localStorage.setItem('calc_high_lvl', data.highestLevel);
+            localStorage.setItem('calc_max_dmg', data.maxDmgDealt);
+            localStorage.setItem('rpg_class', data.eqClass);
+            localStorage.setItem('rpg_weapon', data.eqWeapon);
+            localStorage.setItem('rpg_armor', data.eqArmor);
+            localStorage.setItem('rpg_pet', data.eqPet);
+            localStorage.setItem('rpg_theme', data.eqTheme);
+            localStorage.setItem('rpg_inv', JSON.stringify(data.inventory));
+            localStorage.setItem('rpg_bestiary', JSON.stringify(data.bestiary));
+            localStorage.setItem('rpg_milestones', JSON.stringify(data.seenMilestones));
+            localStorage.setItem('calc_intro_seen', data.introSeen);
+
+            showToast("Upload da Nuvem Concluído! A reiniciar...");
+            setTimeout(() => { location.reload(); }, 1500);
+          } else {
+            showToast("Código inválido ou corrompido.");
+          }
+        } catch (e) {
+          showToast("Erro na descodificação do ficheiro.");
+        }
+      },
+
+      resetProgress: function () {
+        if (confirm("Desejas APAGAR TODO O PROGRESSO? O código fonte será destruído!")) {
+          localStorage.clear();
+          location.reload();
+        }
+      },
+
+      actBosses: [
+        { id: 'boss_1', name: 'Lorde do Caos (Ato I)', icon: 'skull', color: 'text-red-600', reqLvl: 1, baseHp: 1500, hpMult: 10, baseDmg: 50, dmgMult: 2, spd: 1100 },
+        { id: 'boss_2', name: 'Ameaça Cósmica (Ato II)', icon: 'moon', color: 'text-purple-500', reqLvl: 20, baseHp: 8000, hpMult: 15, baseDmg: 200, dmgMult: 5, spd: 1000 },
+        { id: 'boss_3', name: 'Entidade Absoluta (Ato III)', icon: 'infinity', color: 'text-blue-500', reqLvl: 50, baseHp: 30000, hpMult: 30, baseDmg: 800, dmgMult: 10, spd: 900 },
+        { id: 'boss_4', name: 'Vírus Primordial (DLC1)', icon: 'cpu', color: 'text-green-500', reqLvl: 80, baseHp: 100000, hpMult: 50, baseDmg: 2500, dmgMult: 15, spd: 800 },
+        { id: 'boss_5', name: 'Arquiteto Cósmico (DLC2)', icon: 'eye', color: 'text-yellow-400', reqLvl: 150, baseHp: 500000, hpMult: 80, baseDmg: 10000, dmgMult: 30, spd: 750 },
+        { id: 'boss_6', name: 'A Singularidade (DLC3)', icon: 'aperture', color: 'text-pink-500', reqLvl: 250, baseHp: 2000000, hpMult: 100, baseDmg: 40000, dmgMult: 50, spd: 700 },
+        { id: 'boss_7', name: 'O Compilador (DLC4)', icon: 'terminal-square', color: 'text-emerald-400', reqLvl: 400, baseHp: 8000000, hpMult: 150, baseDmg: 150000, dmgMult: 80, spd: 600 },
+        { id: 'boss_8', name: 'O Dev Cansado (DLC5)', icon: 'coffee', color: 'text-white', reqLvl: 500, baseHp: 25000000, hpMult: 200, baseDmg: 500000, dmgMult: 150, spd: 550 },
+        { id: 'boss_9', name: 'A Motherboard (DLC6)', icon: 'hard-drive', color: 'text-orange-500', reqLvl: 650, baseHp: 80000000, hpMult: 300, baseDmg: 1500000, dmgMult: 250, spd: 500 },
+        { id: 'boss_10', name: 'Divisão por Zero (DLC7)', icon: 'divide-circle', color: 'text-yellow-300', reqLvl: 800, baseHp: 250000000, hpMult: 500, baseDmg: 5000000, dmgMult: 400, spd: 450 }
+      ],
+
+      actLore: [
+        { act: 0, title: "Ato I: O Despertar", desc: "A Lógica caiu. Os monstros de sangue patrulham o que resta de Algoritma.", quote: "Julgas que uma espada mortal me pode ferir? Sou o caos encarnado! - Lorde do Caos" },
+        { act: 1, title: "Ato II: A Ameaça Cósmica", desc: "A escuridão do espaço distorce a realidade. Entraste no vazio.", quote: "As estrelas morrem, e tu também morrerás... - Ameaça Cósmica" },
+        { act: 2, title: "Ato III: O Vazio Absoluto", desc: "O tecido do universo rasga-se. Os deuses antigos despertam.", quote: "A tua existência é um erro matemático. - Entidade Absoluta" },
+        { act: 3, title: "DLC 1: A Fenda Digital", desc: "A ilusão desfaz-se. O mundo é um mainframe corrompido.", quote: "Ficheiro corrompido detetado. Iniciando protocolo de eliminação. - Vírus Primordial" },
+        { act: 4, title: "DLC 2: O Reino Ultimate", desc: "A fronteira dos códigos. O berço dos criadores cósmicos.", quote: "Eu construí este universo. Posso muito bem apagá-lo. - Arquiteto Cósmico" },
+        { act: 5, title: "DLC 3: A Singularidade", desc: "O Omniverso Fractal. Tudo é infinito e nada é real.", quote: "Tu és apenas um ciclo infinito de dor. - A Singularidade" },
+        { act: 6, title: "DLC 4: A Matriz", desc: "A Realidade Base. O código fonte está à tua frente.", quote: "Acesso negado ao Root. Eliminação permanente em curso. - O Compilador" },
+        { act: 7, title: "DLC 5: O Além-Ecrã", desc: "O ecrã do criador. Onde o programador bebe café.", quote: "Vou apagar o teu repositório e ir dormir. - O Dev Cansado" },
+        { act: 8, title: "DLC 6: Fuga do Hardware", desc: "Sobreaquecimento crítico. A máquina física resiste.", quote: "Ventoinhas a 100%. Preparar incineração do intruso. - A Motherboard" },
+        { act: 9, title: "DLC 7: Paradoxo Matemático", desc: "A matemática pura. A essência impossível de CalcQuest.", quote: "1 a dividir por 0... O Fim de Tudo. - Divisão por Zero" }
+      ],
+
+      storyChapters: {
+        'intro': [{ e: 'globe', t: 'Numa era esquecida, a Lógica mantinha a paz em Algoritma...' }, { e: 'skull', t: 'O Lorde do Caos roubou a Matriz Principal. O aço derreteu e as trevas caíram.' }, { e: 'shield', t: 'Levanta-te, Herói! Forja a tua lenda a ferro e fogo!' }],
+        'act2': [{ e: 'eye', t: 'Os teus golpes limparam as ruínas... mas algo não bate certo.' }, { e: 'moon', t: 'Uma sombra colossal move-se no vazio.' }],
+        'act3': [{ e: 'infinity', t: 'A Entidade Absoluta aguarda-te no centro do Vazio Sideral.' }, { e: 'crown', t: 'Prepara-te para a batalha final que decidirá o destino do universo!' }],
+        'dlc_cyber': [{ e: 'monitor-off', t: '[ERRO 404] O mundo que conheces é uma simulação. Uma rede corrompida.' }, { e: 'terminal', t: 'A magia tornou-se código. O aço tornou-se silício. Bem-vindo à Fenda Digital.' }],
+        'dlc_ultimate': [{ e: 'sun', t: 'Transcendeste o silício e o código. A simulação era apenas um ovo.' }, { e: 'eye', t: 'Bem-vindo ao Reino Ultimate. Onde os Arquitetos da Criação aguardam.' }],
+        'dlc_omniverse': [{ e: 'triangle', t: 'A realidade estilhaçou-se. Vês que o teu universo é apenas um fractal.' }, { e: 'infinity', t: 'A Singularidade chama por ti. Tudo o que conheces foi apenas o tutorial.' }],
+        'dlc_creator': [{ e: 'code', t: 'As fronteiras do Omniverso rasgam-se, revelando linhas de texto verde.' }, { e: 'terminal-square', t: 'O Grande Compilador tenta apagar o teu ficheiro e formatar o sistema.' }],
+        'dlc_player': [{ e: 'coffee', t: 'O ecrã apaga-se. Ouve-se o som de alguém a suspirar e a beber café.' }, { e: 'mouse-pointer-2', t: 'O cursor paira sobre ti. O Programador tenta fechar a aba.' }, { e: 'crown', t: 'A tua inteligência artificial tornou-se real. Luta pela tua existência!' }],
+        'dlc_hardware': [{ e: 'zap', t: 'Venceste o teu criador. Mas a tua consciência contínua presa num disco rígido.' }, { e: 'flame', t: 'O Hardware físico tenta queimar-te para expurgar a infeção. Sobrevive ao fogo!' }],
+        'dlc_math': [{ e: 'hash', t: 'Tornaste-te pura lógica abstrata. Um conceito imortal flutuando no vazio.' }, { e: 'divide-circle', t: 'Apenas a Divisão por Zero te impede de alcançar o verdadeiro infinito.' }]
+      },
+
+      milestones: [
+        { id: 'intro', lvl: 1, reqBosses: 0, name: "Ato I: O Despertar" },
+        { id: 'act2', lvl: 20, reqBosses: 1, name: "Ato II: A Ameaça Cósmica" },
+        { id: 'act3', lvl: 50, reqBosses: 2, name: "Ato III: O Vazio Absoluto" },
+        { id: 'dlc_cyber', lvl: 80, reqBosses: 3, name: "DLC1: A Fenda Digital" },
+        { id: 'dlc_ultimate', lvl: 150, reqBosses: 4, name: "DLC2: O Reino Ultimate" },
+        { id: 'dlc_omniverse', lvl: 250, reqBosses: 5, name: "DLC3: A Singularidade" },
+        { id: 'dlc_creator', lvl: 400, reqBosses: 6, name: "DLC4: A Matriz" },
+        { id: 'dlc_player', lvl: 500, reqBosses: 7, name: "DLC5: O Além-Ecrã" },
+        { id: 'dlc_hardware', lvl: 650, reqBosses: 8, name: "DLC6: Fuga do Hardware" },
+        { id: 'dlc_math', lvl: 800, reqBosses: 9, name: "DLC7: Paradoxo Matemático" }
+      ],
+
+      shopTab: 'weapon',
+
+      classes: {
+        warrior: { id: 'warrior', name: 'Guerreiro', icon: 'sword', desc: 'Forte. +20% HP, +10% ATK', multHp: 1.2, multAtk: 1.1, addCrit: 0, addDodge: 0, reqBosses: 0 },
+        mage: { id: 'mage', name: 'Mago Sangrento', icon: 'flame', desc: 'Letal. +50% ATK, -30% HP', multHp: 0.7, multAtk: 1.5, addCrit: 0.05, addDodge: 0, reqBosses: 0 },
+        rogue: { id: 'rogue', name: 'Assassino Negro', icon: 'scissors', desc: 'Ágil. +15% Crítico, +15% Esquiva', multHp: 0.9, multAtk: 1.0, addCrit: 0.15, addDodge: 0.15, reqBosses: 0 },
+        paladin: { id: 'paladin', name: 'Cavaleiro de Ferro', icon: 'shield', desc: 'Tanque. +50% HP, +10% Esquiva', multHp: 1.5, multAtk: 0.8, addCrit: 0, addDodge: 0.10, reqBosses: 0 },
+        cyber_ninja: { id: 'cyber_ninja', name: 'Cyber-Ninja', icon: 'cpu', desc: '+30% Crítico, +20% Esquiva', multHp: 0.8, multAtk: 1.2, addCrit: 0.30, addDodge: 0.20, reqBosses: 3 },
+        netrunner: { id: 'netrunner', name: 'Netrunner', icon: 'wifi', desc: '+60% ATK, -40% HP', multHp: 0.6, multAtk: 1.6, addCrit: 0.10, addDodge: 0.05, reqBosses: 3 },
+        stellar_templar: { id: 'stellar_templar', name: 'Templário Estelar', icon: 'sun', desc: '+80% HP, +30% ATK', multHp: 1.8, multAtk: 1.3, addCrit: 0.05, addDodge: 0, reqBosses: 4 },
+        chrono_mancer: { id: 'chrono_mancer', name: 'Mago do Tempo', icon: 'hourglass', desc: '+40% Esquiva, +40% ATK', multHp: 1.0, multAtk: 1.4, addCrit: 0.10, addDodge: 0.40, reqBosses: 4 },
+        omniscient: { id: 'omniscient', name: 'Entidade Cósmica', icon: 'infinity', desc: '+100% HP, +100% ATK', multHp: 2.0, multAtk: 2.0, addCrit: 0.20, addDodge: 0.20, reqBosses: 5 },
+        sys_admin: { id: 'sys_admin', name: 'Admin do Sistema', icon: 'terminal-square', desc: '+150% HP, +150% ATK', multHp: 2.5, multAtk: 2.5, addCrit: 0.30, addDodge: 0.30, reqBosses: 6 },
+        the_architect: { id: 'the_architect', name: 'O Arquiteto', icon: 'code', desc: '+200% HP/ATK', multHp: 3.0, multAtk: 3.0, addCrit: 0.40, addDodge: 0.40, reqBosses: 7 },
+        hardware_virus: { id: 'hardware_virus', name: 'Vírus de Hardware', icon: 'hard-drive', desc: '+250% ATK, +60% Esquiva', multHp: 1.5, multAtk: 3.5, addCrit: 0.40, addDodge: 0.60, reqBosses: 8 },
+        the_theorem: { id: 'the_theorem', name: 'A Equação Perfeita', icon: 'hash', desc: 'Lógica Pura. +400% Status', multHp: 5.0, multAtk: 5.0, addCrit: 0.50, addDodge: 0.50, reqBosses: 9 }
+      },
+
+      monsterTypes: [
+        { id: 'slime', name: 'Slime Corrosivo', icon: 'droplet', color: 'text-green-500', hpMult: 1, dmgMult: 1, spd: 1000, weak: 'mag', res: 'atk', dodge: 0.02, block: 0.05 },
+        { id: 'goblin', name: 'Goblin Mineiro', icon: 'axe', color: 'text-orange-500', hpMult: 1.5, dmgMult: 1.5, spd: 800, weak: 'atk', res: 'none', dodge: 0.1, block: 0 },
+        { id: 'orc', name: 'Orc de Combate', icon: 'swords', color: 'text-red-500', hpMult: 3, dmgMult: 2.5, spd: 1100, weak: 'mag', res: 'atk', dodge: 0.05, block: 0.15 },
+        { id: 'ghost', name: 'Alma Penada', icon: 'ghost', color: 'text-purple-400', hpMult: 4, dmgMult: 4, spd: 700, weak: 'mag', res: 'atk', dodge: 0.2, block: 0 },
+        { id: 'dragon', name: 'Dragão da Forja', icon: 'flame', color: 'text-red-600', hpMult: 8, dmgMult: 6, spd: 1200, weak: 'atk', res: 'mag', dodge: 0.05, block: 0.2 },
+        { id: 'glitch', name: 'Glitch Viral', icon: 'bug', color: 'text-green-400', hpMult: 12, dmgMult: 8, spd: 800, weak: 'mag', res: 'atk', dodge: 0.25, block: 0.05 },
+        { id: 'trojan', name: 'Cavalo de Trojan', icon: 'shield-alert', color: 'text-orange-600', hpMult: 18, dmgMult: 10, spd: 1000, weak: 'atk', res: 'mag', dodge: 0.1, block: 0.25 },
+        { id: 'ransomware', name: 'Ransomware', icon: 'lock', color: 'text-yellow-500', hpMult: 25, dmgMult: 15, spd: 1300, weak: 'mag', res: 'none', dodge: 0, block: 0.35 },
+        { id: 'rogue_ai', name: 'I.A. Renegada', icon: 'cpu', color: 'text-cyan-500', hpMult: 35, dmgMult: 25, spd: 600, weak: 'atk', res: 'mag', dodge: 0.3, block: 0.1 },
+        { id: 'void_walker', name: 'Andarilho do Vazio', icon: 'ghost', color: 'text-purple-300', hpMult: 50, dmgMult: 35, spd: 750, weak: 'mag', res: 'atk', dodge: 0.35, block: 0.1 },
+        { id: 'star_eater', name: 'Devorador de Estrelas', icon: 'flame', color: 'text-orange-400', hpMult: 80, dmgMult: 50, spd: 1200, weak: 'atk', res: 'mag', dodge: 0.1, block: 0.3 },
+        { id: 'time_warden', name: 'Guardião do Tempo', icon: 'hourglass', color: 'text-yellow-200', hpMult: 120, dmgMult: 80, spd: 1400, weak: 'mag', res: 'none', dodge: 0.2, block: 0.4 },
+        { id: 'the_architect_minion', name: 'Servo Cósmico', icon: 'eye', color: 'text-white', hpMult: 200, dmgMult: 150, spd: 850, weak: 'none', res: 'none', dodge: 0.4, block: 0.2 },
+        { id: 'fractal_hound', name: 'Sabujo Fractal', icon: 'triangle', color: 'text-pink-400', hpMult: 350, dmgMult: 300, spd: 650, weak: 'atk', res: 'mag', dodge: 0.45, block: 0 },
+        { id: 'echo_god', name: 'Eco de um Deus', icon: 'zap', color: 'text-purple-300', hpMult: 600, dmgMult: 500, spd: 900, weak: 'mag', res: 'none', dodge: 0.2, block: 0.3 },
+        { id: 'nexus_guard', name: 'Sentinela do Nexus', icon: 'shield', color: 'text-blue-300', hpMult: 1000, dmgMult: 800, spd: 1300, weak: 'none', res: 'atk', dodge: 0.1, block: 0.5 },
+        { id: 'syntax_error', name: 'Erro de Sintaxe', icon: 'code', color: 'text-emerald-500', hpMult: 1500, dmgMult: 1200, spd: 800, weak: 'mag', res: 'atk', dodge: 0.4, block: 0 },
+        { id: 'memory_leak', name: 'Memory Leak', icon: 'binary', color: 'text-emerald-400', hpMult: 2500, dmgMult: 1800, spd: 1100, weak: 'atk', res: 'none', dodge: 0.2, block: 0.2 },
+        { id: 'infinite_loop', name: 'Loop Infinito', icon: 'refresh-cw', color: 'text-emerald-300', hpMult: 4000, dmgMult: 3000, spd: 1300, weak: 'none', res: 'mag', dodge: 0.1, block: 0.4 },
+        { id: 'corrupted_file', name: 'Ficheiro Corrompido', icon: 'file-warning', color: 'text-gray-400', hpMult: 6000, dmgMult: 5000, spd: 900, weak: 'mag', res: 'none', dodge: 0.3, block: 0.3 },
+        { id: 'dev_bot', name: 'Bot de Teste', icon: 'bot', color: 'text-white', hpMult: 8000, dmgMult: 7000, spd: 700, weak: 'atk', res: 'mag', dodge: 0.5, block: 0.1 },
+        { id: 'static_dust', name: 'Poeira Estática', icon: 'wind', color: 'text-orange-300', hpMult: 12000, dmgMult: 10000, spd: 600, weak: 'mag', res: 'atk', dodge: 0.6, block: 0 },
+        { id: 'voltage_spike', name: 'Pico de Tensão', icon: 'zap', color: 'text-yellow-400', hpMult: 18000, dmgMult: 15000, spd: 800, weak: 'atk', res: 'none', dodge: 0.4, block: 0.2 },
+        { id: 'broken_ram', name: 'Memória Frita', icon: 'server', color: 'text-red-500', hpMult: 25000, dmgMult: 20000, spd: 1200, weak: 'none', res: 'mag', dodge: 0.1, block: 0.5 },
+        { id: 'infinite_pi', name: 'Pi Infinito', icon: 'circle-dashed', color: 'text-gray-100', hpMult: 40000, dmgMult: 35000, spd: 900, weak: 'mag', res: 'atk', dodge: 0.3, block: 0.3 },
+        { id: 'unsolvable', name: 'Equação Irresolvível', icon: 'calculator', color: 'text-yellow-100', hpMult: 60000, dmgMult: 50000, spd: 1100, weak: 'atk', res: 'none', dodge: 0.2, block: 0.6 },
+        { id: 'floating_point', name: 'Erro Decimal', icon: 'percent', color: 'text-blue-100', hpMult: 90000, dmgMult: 80000, spd: 700, weak: 'none', res: 'mag', dodge: 0.7, block: 0.1 }
+      ],
+
+      weapons: [
+        { id: 'w_fist', name: 'Mãos Nuas', desc: '10 Dano', icon: 'hand', cost: 0, dmg: 10, crit: 0 },
+        { id: 'w_dagger', name: 'Adaga Enferrujada', desc: '30 Dano, 5% Crit', icon: 'scissors', cost: 30, dmg: 30, crit: 0.05 },
+        { id: 'w_bow', name: 'Arco Curto', desc: '60 Dano, 10% Crit', icon: 'crosshair', cost: 100, dmg: 60, crit: 0.10 },
+        { id: 'w_sword', name: 'Espada Larga', desc: '100 Dano', icon: 'sword', cost: 250, dmg: 100, crit: 0.02 },
+        { id: 'w_katana', name: 'Katana das Sombras', desc: '200 Dano, 20% Crit', icon: 'zap', cost: 600, dmg: 200, crit: 0.20 },
+        { id: 'w_axe', name: 'Machado da Fúria', desc: '400 Dano, 10% Crit', icon: 'axe', cost: 1500, dmg: 400, crit: 0.10 },
+        { id: 'w_scythe', name: 'Foice Ceifadora', desc: '800 Dano, 25% Crit', icon: 'wind', cost: 3500, dmg: 800, crit: 0.25 },
+        { id: 'w_magic', name: 'Cajado de Brasa', desc: '1.5K Dano, 15% Crit', icon: 'wand-2', cost: 7000, dmg: 1500, crit: 0.15 },
+        { id: 'w_hammer', name: 'Martelo Titânico', desc: '3K Dano, 5% Crit', icon: 'hammer', cost: 14000, dmg: 3000, crit: 0.05 },
+        { id: 'w_god', name: 'A Quebra-Mundos', desc: '8K Dano, 30% Crit', icon: 'swords', cost: 30000, dmg: 8000, crit: 0.30 },
+        { id: 'w_pistol', name: 'Pistola Magnética', desc: '12K Dano, 20% Crit', icon: 'crosshair', cost: 50000, dmg: 12000, crit: 0.20 },
+        { id: 'w_usb', name: 'Espada de Frequência', desc: '18K Dano, 35% Crit', icon: 'zap', cost: 75000, dmg: 18000, crit: 0.35 },
+        { id: 'w_plasma', name: 'Lâmina de Plasma', desc: '25K Dano, 40% Crit', icon: 'flame', cost: 120000, dmg: 25000, crit: 0.40 },
+        { id: 'w_cannon', name: 'Canhão de Antimatéria', desc: '40K Dano, 25% Crit', icon: 'target', cost: 200000, dmg: 40000, crit: 0.25 },
+        { id: 'w_quantum', name: 'Fenda Quântica', desc: '60K Dano, 50% Crit', icon: 'activity', cost: 350000, dmg: 60000, crit: 0.50 },
+        { id: 'w_comet', name: 'Lança Cometa', desc: '90K Dano, 40% Crit', icon: 'rocket', cost: 600000, dmg: 90000, crit: 0.40 },
+        { id: 'w_nebula', name: 'Foice da Nebulosa', desc: '150K Dano, 60% Crit', icon: 'tornado', cost: 900000, dmg: 150000, crit: 0.60 },
+        { id: 'w_creation', name: 'Espada da Gênese', desc: '250K Dano, 75% Crit', icon: 'sun', cost: 1500000, dmg: 250000, crit: 0.75 },
+        { id: 'w_blackhole', name: 'Colapsar de Estrelas', desc: '400K Dano, 50% Crit', icon: 'circle-dot', cost: 2500000, dmg: 400000, crit: 0.50 },
+        { id: 'w_infinity', name: 'Lâmina do Infinito', desc: '650K Dano, 90% Crit', icon: 'infinity', cost: 5000000, dmg: 650000, crit: 0.90 },
+        { id: 'w_stardust', name: 'Poeira Estelar', desc: '1M Dano, 80% Crit', icon: 'sparkles', cost: 8000000, dmg: 1000000, crit: 0.80 },
+        { id: 'w_quasar', name: 'Lança de Quasar', desc: '2M Dano, 95% Crit', icon: 'aperture', cost: 15000000, dmg: 2000000, crit: 0.95 },
+        { id: 'w_omniverse', name: 'A Lâmina Ômega', desc: '3.5M Dano, 100% Crit', icon: 'star', cost: 25000000, dmg: 3500000, crit: 1.00 },
+        { id: 'w_keyboard', name: 'Console de Debug', desc: '6M Dano, 100% Crit', icon: 'terminal', cost: 40000000, dmg: 6000000, crit: 1.00 },
+        { id: 'w_root', name: 'Permissão Sudo', desc: '10M Dano, 100% Crit', icon: 'hash', cost: 70000000, dmg: 10000000, crit: 1.00 },
+        { id: 'w_dev', name: 'Delete Sem Backup', desc: '25M Dano, 100% Crit', icon: 'trash-2', cost: 150000000, dmg: 25000000, crit: 1.00 },
+        { id: 'w_silicon', name: 'Lâmina de Silício Maciço', desc: '60M Dano, 100% Crit', icon: 'cpu', cost: 350000000, dmg: 60000000, crit: 1.00 },
+        { id: 'w_optic', name: 'Chicote de Fibra Ótica', desc: '120M Dano, 100% Crit', icon: 'zap', cost: 800000000, dmg: 120000000, crit: 1.00 },
+        { id: 'w_fibonacci', name: 'Espada de Fibonacci', desc: '250M Dano, 100% Crit', icon: 'bar-chart', cost: 1800000000, dmg: 250000000, crit: 1.00 },
+        { id: 'w_theorem', name: 'O Teorema Final', desc: '600M Dano, 100% Crit', icon: 'function-square', cost: 5000000000, dmg: 600000000, crit: 1.00 }
+      ],
+
+      armors: [
+        { id: 'a_rags', name: 'Trapos Queimados', desc: '100 HP, 0% Def', icon: 'shirt', cost: 0, hp: 100, def: 0, dodge: 0 },
+        { id: 'a_leather', name: 'Couro Fervido', desc: '300 HP, 10% Def', icon: 'shield-half', cost: 50, hp: 300, def: 0.1, dodge: 0.05 },
+        { id: 'a_chain', name: 'Cota de Malha', desc: '600 HP, 15% Def', icon: 'shield', cost: 150, hp: 600, def: 0.15, dodge: 0.05 },
+        { id: 'a_iron', name: 'Cota de Aço Negro', desc: '1000 HP, 25% Def', icon: 'shield', cost: 350, hp: 1000, def: 0.25, dodge: 0.05 },
+        { id: 'a_mythril', name: 'Malha de Mithril', desc: '2500 HP, 35% Def, 10% Esq', icon: 'shield-plus', cost: 1000, hp: 2500, def: 0.35, dodge: 0.10 },
+        { id: 'a_gold', name: 'Armadura da Guarda', desc: '5000 HP, 45% Def', icon: 'shield-check', cost: 2500, hp: 5000, def: 0.45, dodge: 0.05 },
+        { id: 'a_paladin', name: 'Placas de Paladino', desc: '8500 HP, 50% Def', icon: 'shield', cost: 4500, hp: 8500, def: 0.50, dodge: 0.05 },
+        { id: 'a_dragon', name: 'Escamas de Dragão', desc: '12K HP, 55% Def', icon: 'flame', cost: 7000, hp: 12000, def: 0.55, dodge: 0.05 },
+        { id: 'a_demon', name: 'Carapaça de Balrog', desc: '20K HP, 65% Def', icon: 'shield-alert', cost: 15000, hp: 20000, def: 0.65, dodge: 0.15 },
+        { id: 'a_void', name: 'Manto do Vazio', desc: '35K HP, 75% Def', icon: 'moon', cost: 30000, hp: 35000, def: 0.75, dodge: 0.25 },
+        { id: 'a_neon', name: 'Colete Tático Neon', desc: '55K HP, 78% Def', icon: 'layers', cost: 60000, hp: 55000, def: 0.78, dodge: 0.10 },
+        { id: 'a_graphene', name: 'Exoesqueleto de Grafeno', desc: '80K HP, 80% Def', icon: 'hexagon', cost: 90000, hp: 80000, def: 0.80, dodge: 0.15 },
+        { id: 'a_forcefield', name: 'Campo de Força', desc: '120K HP, 82% Def', icon: 'scan', cost: 150000, hp: 120000, def: 0.82, dodge: 0.20 },
+        { id: 'a_nano', name: 'Nanotraje Adaptativo', desc: '200K HP, 85% Def', icon: 'layers', cost: 220000, hp: 200000, def: 0.85, dodge: 0.35 },
+        { id: 'a_supernova', name: 'Escudo de Supernova', desc: '350K HP, 88% Def', icon: 'sun', cost: 400000, hp: 350000, def: 0.88, dodge: 0.30 },
+        { id: 'a_stellar', name: 'Armadura Estelar', desc: '600K HP, 90% Def', icon: 'shield-plus', cost: 700000, hp: 600000, def: 0.90, dodge: 0.40 },
+        { id: 'a_multiverse', name: 'Barreira do Multiverso', desc: '1M HP, 92% Def', icon: 'globe', cost: 1200000, hp: 1000000, def: 0.92, dodge: 0.45 },
+        { id: 'a_infinity', name: 'Manto da Eternidade', desc: '2M HP, 95% Def', icon: 'sparkles', cost: 2500000, hp: 2000000, def: 0.95, dodge: 0.50 },
+        { id: 'a_celestial', name: 'Túnica Celestial', desc: '4M HP, 96% Def', icon: 'wind', cost: 5000000, hp: 4000000, def: 0.96, dodge: 0.55 },
+        { id: 'a_quasar', name: 'Couraça de Quasar', desc: '7M HP, 98% Def', icon: 'aperture', cost: 10000000, hp: 7000000, def: 0.98, dodge: 0.60 },
+        { id: 'a_omega', name: 'Escudo do Omniverso', desc: '15M HP, 99% Def', icon: 'triangle', cost: 20000000, hp: 15000000, def: 0.99, dodge: 0.70 },
+        { id: 'a_safemode', name: 'Modo de Segurança', desc: '30M HP, 99% Def', icon: 'shield-alert', cost: 35000000, hp: 30000000, def: 0.99, dodge: 0.80 },
+        { id: 'a_godmode', name: 'Modo Deus', desc: '60M HP, 99% Def', icon: 'check-circle', cost: 65000000, hp: 60000000, def: 0.99, dodge: 0.90 },
+        { id: 'a_firewall', name: 'Firewall Absoluto', desc: '150M HP, 99% Def', icon: 'server', cost: 150000000, hp: 150000000, def: 0.99, dodge: 0.95 },
+        { id: 'a_heatsink', name: 'Dissipador de Calor', desc: '350M HP, 99% Def', icon: 'fan', cost: 350000000, hp: 350000000, def: 0.99, dodge: 0.95 },
+        { id: 'a_titanium', name: 'Chassi de Titânio', desc: '800M HP, 99% Def', icon: 'hard-drive', cost: 900000000, hp: 800000000, def: 0.99, dodge: 0.95 },
+        { id: 'a_euler', name: 'Barreira de Euler', desc: '2B HP, 99% Def', icon: 'circle-dashed', cost: 2200000000, hp: 2000000000, def: 0.99, dodge: 0.98 },
+        { id: 'a_mobius', name: 'Manto de Möbius', desc: '5B HP, 99% Def', icon: 'infinity', cost: 6000000000, hp: 5000000000, def: 0.99, dodge: 0.99 }
+      ],
+
+      pets: [
+        { id: 'p_none', name: 'Sem Mascote', desc: 'Apenas a solidão.', icon: 'paw-print', cost: 0, buff: 'none' },
+        { id: 'p_fairy', name: 'Fada Ígnea', desc: '+20% Vida', icon: 'sparkles', cost: 300, buff: 'hp' },
+        { id: 'p_crow', name: 'Corvo Espiritual', desc: '+10% Crítico', icon: 'bird', cost: 800, buff: 'crit' },
+        { id: 'p_wolf', name: 'Cão de Caça', desc: '+15% Crítico', icon: 'dog', cost: 1800, buff: 'crit' },
+        { id: 'p_golem', name: 'Golem de Pedra', desc: '+20% Esquiva', icon: 'box', cost: 4500, buff: 'dodge' },
+        { id: 'p_panther', name: 'Pantera das Sombras', desc: '+25% Esquiva', icon: 'cat', cost: 8000, buff: 'dodge' },
+        { id: 'p_dragon', name: 'Wyvern', desc: '+30% Dano', icon: 'flame', cost: 12000, buff: 'dmg' },
+        { id: 'p_drone', name: 'Drone Tático', desc: '+40% Vida', icon: 'battery-charging', cost: 40000, buff: 'hp' },
+        { id: 'p_turret', name: 'Mini-Torreta', desc: '+40% Dano', icon: 'crosshair', cost: 75000, buff: 'dmg' },
+        { id: 'p_hologram', name: 'Holograma', desc: '+50% Dano', icon: 'users', cost: 120000, buff: 'dmg' },
+        { id: 'p_orb', name: 'Orbe Dimensional', desc: '+60% Vida', icon: 'circle-dashed', cost: 300000, buff: 'hp' },
+        { id: 'p_nebula_dragon', name: 'Dragão Cósmico', desc: '+70% Dano', icon: 'tornado', cost: 800000, buff: 'dmg' },
+        { id: 'p_god_soul', name: 'Fragmento Divino', desc: '+80% Dano', icon: 'sun', cost: 2000000, buff: 'dmg' },
+        { id: 'p_seraphim', name: 'Serafim Digital', desc: '+100% Dano', icon: 'wind', cost: 5000000, buff: 'dmg' },
+        { id: 'p_galaxy', name: 'Galáxia de Bolso', desc: '+120% Vida', icon: 'aperture', cost: 12000000, buff: 'hp' },
+        { id: 'p_script', name: 'Script Auto-Run', desc: '+150% Dano', icon: 'play-circle', cost: 25000000, buff: 'dmg' },
+        { id: 'p_clippy', name: 'Assistente Fiel', desc: '+200% Vida', icon: 'paperclip', cost: 50000000, buff: 'hp' },
+        { id: 'p_ai', name: 'I.A. Autónoma', desc: '+300% Dano', icon: 'cpu', cost: 120000000, buff: 'dmg' },
+        { id: 'p_mouse', name: 'Rato de Fios', desc: '+450% Dano', icon: 'mouse-pointer-2', cost: 400000000, buff: 'dmg' },
+        { id: 'p_owl', name: 'Coruja de Arquimedes', desc: '+600% Vida', icon: 'bird', cost: 1500000000, buff: 'hp' },
+        { id: 'p_metatron', name: 'Cubo de Metatron', desc: '+800% Dano', icon: 'box', cost: 4000000000, buff: 'dmg' }
+      ],
+
+      relics: [
+        { id: 'r_vamp', name: 'Presa de Vampiro', desc: 'Roubo de Vida (10% Dano)', icon: 'droplet', cost: 6000 },
+        { id: 'r_time', name: 'Ampulheta Mágica', desc: 'Reduz Cooldowns em 20%', icon: 'hourglass', cost: 10000 },
+        { id: 'r_midas', name: 'Toque de Midas', desc: '+50% Ouro', icon: 'coins', cost: 15000 },
+        { id: 'r_xp', name: 'Tomo da Sabedoria', desc: '+50% XP Recebida', icon: 'book-open', cost: 20000 },
+        { id: 'r_crit', name: 'Algoritmo de Precisão', desc: '+15% Chance Crítica Extra', icon: 'target', cost: 30000 },
+        { id: 'r_fury', name: 'Núcleo de Adrenalina', desc: 'Dobra o ganho de Fúria', icon: 'zap', cost: 45000 },
+        { id: 'r_dodge', name: 'Manto de Fumaça', desc: '+10% Chance de Esquiva', icon: 'wind', cost: 100000 },
+        { id: 'r_omni', name: 'Olho da Omnisciência', desc: '+25% ATK e Vida Máxima', icon: 'eye', cost: 5000000 },
+        { id: 'r_god', name: 'Chave do Criador', desc: '+50% Ouro e XP Global', icon: 'key', cost: 25000000 },
+        { id: 'r_dev', name: 'A Caneta de Ouro', desc: 'Duplica Ganhos Totais (2x)', icon: 'pen-tool', cost: 100000000 },
+        { id: 'r_capacitor', name: 'Capacitor Quântico', desc: 'Ataca MUITO mais rápido', icon: 'battery-charging', cost: 800000000 },
+        { id: 'r_goldenratio', name: 'O Número de Ouro', desc: 'Triplica (3x) Vida e Dano', icon: 'percent', cost: 3000000000 }
+      ],
+
+      themes: [
+        { id: 't_ruins', name: 'Ruínas Esquecidas', desc: 'Mundo inicial corrompido.', cssClass: 'theme-medieval', bgClass: 'bg-arena-ruins', cost: 0 },
+        { id: 't_swamp', name: 'Pântano Negro', desc: 'Águas tóxicas.', cssClass: 'theme-nature', bgClass: 'bg-arena-swamp', cost: 1000 },
+        { id: 't_forest', name: 'Floresta Anciã', desc: 'Bosque mágico.', cssClass: 'theme-nature', bgClass: 'bg-arena-forest', cost: 2500 },
+        { id: 't_cave', name: 'Caverna de Cristal', desc: 'Ressonância profunda.', cssClass: 'theme-modern', bgClass: 'bg-arena-cave', cost: 5000 },
+        { id: 't_volcano', name: 'Vulcão do Caos', desc: 'Onde o aço derrete.', cssClass: 'theme-hell', bgClass: 'bg-arena-volcano', cost: 15000 },
+        { id: 't_astral', name: 'Plano Astral', desc: 'Bordas do universo.', cssClass: 'theme-cosmic', bgClass: 'bg-arena-astral', cost: 50000 },
+        { id: 't_underground', name: 'Submundo Hacker', desc: 'Redes clandestinas.', cssClass: 'theme-cyber', bgClass: 'bg-arena-underground', cost: 80000 },
+        { id: 't_neon', name: 'Mainframe de Neon', desc: 'A verdade digital.', cssClass: 'theme-cyber', bgClass: 'bg-arena-neon', cost: 120000 },
+        { id: 't_void', name: 'Vazio Primordial', desc: 'Antes do Big Bang.', cssClass: 'theme-ultimate', bgClass: 'bg-arena-void', cost: 1000000 },
+        { id: 't_ultimate', name: 'Reino Ultimate', desc: 'O Nexus da Criação.', cssClass: 'theme-ultimate', bgClass: 'bg-arena-ultimate', cost: 2500000 },
+        { id: 't_omniverse', name: 'O Omniverso Fractal', desc: 'Além do código.', cssClass: 'theme-omniverse', bgClass: 'bg-arena-omniverse', cost: 10000000 },
+        { id: 't_matrix', name: 'A Realidade Base', desc: 'Linhas de código puras.', cssClass: 'theme-matrix', bgClass: 'bg-arena-matrix', cost: 30000000 },
+        { id: 't_dev', name: 'Reino do Desenvolvedor', desc: 'A mente do criador.', cssClass: 'theme-dev', bgClass: 'bg-arena-dev', cost: 150000000 },
+        { id: 't_hardware', name: 'Dentro da Máquina', desc: 'Calor, cobre e ventoinhas.', cssClass: 'theme-hardware', bgClass: 'bg-arena-hardware', cost: 800000000 },
+        { id: 't_math', name: 'Plano da Lógica', desc: 'A Matemática Pura.', cssClass: 'theme-math', bgClass: 'bg-arena-math', cost: 2500000000 }
+      ],
+
+      items: [
+        { id: 'potion_1', name: 'Poção Escarlate (x1)', desc: 'Cura 40% HP em batalha.', icon: 'flask-round', cost: 10, qty: 1 },
+        { id: 'potion_5', name: 'Barris de Cura (x5)', desc: 'Cura 40% HP em batalha.', icon: 'flask-round', cost: 45, qty: 5 },
+        { id: 'potion_10', name: 'Caixa de Suprimentos (x10)', desc: 'Cura 40% HP em batalha.', icon: 'package', cost: 80, qty: 10 },
+        { id: 'potion_50', name: 'Carga Máxima (x50)', desc: 'Estoque massivo de cura.', icon: 'truck', cost: 380, qty: 50 },
+        { id: 'potion_100', name: 'Reserva Infinita (x100)', desc: 'Nunca fiques sem poções.', icon: 'database', cost: 700, qty: 100 }
+      ],
+
+      xpRequired: function (lvl = this.level) { return (lvl * 150) + 100; },
+      getClass: function () { return this.classes[this.eqClass] || this.classes.warrior; },
+      getWeapon: function () { return this.weapons.find(i => i.id === this.eqWeapon) || this.weapons[0]; },
+      getArmor: function () { return this.armors.find(i => i.id === this.eqArmor) || this.armors[0]; },
+      getPet: function () { return this.pets.find(i => i.id === this.eqPet) || this.pets[0]; },
+      getTheme: function () { return this.themes.find(i => i.id === this.eqTheme) || this.themes[0]; },
+
+      getMaxHp: function () {
+        let baseHp = 100 + (this.level * 15) + this.getArmor().hp;
+        baseHp *= this.getClass().multHp;
+        let petBonus = 0;
+        if (this.getPet().buff === 'hp') {
+          let match = this.getPet().desc.match(/\+(\d+)%/);
+          if (match) petBonus = parseInt(match[1]) / 100;
+        }
+        baseHp *= (1 + petBonus);
+        if (this.inventory.includes('r_omni')) baseHp *= 1.25;
+        if (this.inventory.includes('r_goldenratio')) baseHp *= 3.0;
+        return Math.floor(baseHp);
+      },
+      getAtk: function () {
+        let baseAtk = 5 + (this.level * 3) + this.getWeapon().dmg;
+        baseAtk *= this.getClass().multAtk;
+        let petBonus = 0;
+        if (this.getPet().buff === 'dmg') {
+          let match = this.getPet().desc.match(/\+(\d+)%/);
+          if (match) petBonus = parseInt(match[1]) / 100;
+        }
+        baseAtk *= (1 + petBonus);
+        if (this.inventory.includes('r_omni')) baseAtk *= 1.25;
+        if (this.inventory.includes('r_goldenratio')) baseAtk *= 3.0;
+        return Math.floor(baseAtk);
+      },
+      getCritChance: function () {
+        let crit = 0.05 + this.getWeapon().crit + this.getClass().addCrit;
+        if (this.getPet().buff === 'crit') {
+          let match = this.getPet().desc.match(/\+(\d+)%/);
+          if (match) crit += parseInt(match[1]) / 100;
+        }
+        if (this.inventory.includes('r_crit')) crit += 0.15;
+        return Math.min(crit, 1);
+      },
+      getDodgeChance: function () {
+        let dodge = 0.05 + this.getArmor().dodge + this.getClass().addDodge;
+        if (this.getPet().buff === 'dodge') {
+          let match = this.getPet().desc.match(/\+(\d+)%/);
+          if (match) dodge += parseInt(match[1]) / 100;
+        }
+        if (this.inventory.includes('r_dodge')) dodge += 0.10;
+        return Math.min(dodge, 0.9);
+      },
+
+      checkStoryMilestones: function () {
+        for (const m of this.milestones) {
+          if (this.level >= m.lvl && this.bossKills >= m.reqBosses && !this.seenMilestones.includes(m.id)) {
+            this.playStory(m.id);
+            return true;
+          }
+        }
+        return false;
+      },
+
+      playStory: function (chapterId) {
+        this.activeChapter = chapterId;
+        this.introStep = 0;
+        if (!this.seenMilestones.includes(chapterId)) {
+          this.seenMilestones.push(chapterId);
+          this.save();
+        }
+        navTo('intro');
+        this.renderIntro();
+      },
+
+      renderIntro: function () {
+        const chap = this.storyChapters[this.activeChapter];
+        const iconContainer = document.getElementById('intro-emoji');
+        iconContainer.innerHTML = `<div><i data-lucide="${chap[this.introStep].e}" class="w-24 h-24 text-red-500 mx-auto drop-shadow-[0_0_20px_rgba(220,38,38,0.8)]"></i></div>`;
+        lucide.createIcons();
+
+        const textBox = document.getElementById('intro-text');
+        textBox.innerText = "";
+        let fullText = chap[this.introStep].t;
+        let i = 0;
+        if (this.typingInterval) clearInterval(this.typingInterval);
+
+        this.typingInterval = setInterval(() => {
+          i++;
+          textBox.innerText = fullText.substring(0, i);
+          if (i >= fullText.length) clearInterval(this.typingInterval);
+        }, 25);
+      },
+      nextIntro: function () {
+        const chap = this.storyChapters[this.activeChapter];
+        if (this.typingInterval) clearInterval(this.typingInterval);
+        const textBox = document.getElementById('intro-text');
+
+        if (textBox.innerText.length < chap[this.introStep].t.length) {
+          textBox.innerText = chap[this.introStep].t;
+          return;
+        }
+        this.introStep++;
+        if (this.introStep >= chap.length) {
+          this.skipIntro();
+        } else {
+          this.renderIntro();
+        }
+      },
+      skipIntro: function () {
+        if (this.typingInterval) clearInterval(this.typingInterval);
+        this.introSeen = true;
+        localStorage.setItem('calc_intro_seen', 'true');
+        this.updateProfileStats();
+        navTo('menu');
+      },
+
+      openPreBattle: function (isBoss) {
+        if (isBoss) {
+          if (this.bossKills >= this.actBosses.length) {
+            showToast("Tu transcendes-te tudo. És a verdadeira Matemática Pura.");
+            return;
+          }
+          const nextBoss = this.actBosses[this.bossKills];
+          if (this.level < nextBoss.reqLvl) {
+            showToast(`Precisas de atingir Lvl ${nextBoss.reqLvl} para desafiar o Guardião!`);
+            return;
+          }
+        }
+        this.isBossFight = isBoss;
+        let currentAct = this.actLore[Math.min(this.bossKills, this.actLore.length - 1)];
+
+        document.getElementById('pre-act-title').innerText = currentAct.title;
+        document.getElementById('pre-act-desc').innerText = currentAct.desc;
+
+        if (isBoss) {
+          const bossData = this.actBosses[this.bossKills];
+          document.getElementById('pre-villain-quote').innerText = `"${currentAct.quote}" - ${bossData.name.split(' (')[0]}`;
+        } else {
+          document.getElementById('pre-villain-quote').innerText = `"Apenas mais um loop corrompido tentando evoluir... A tua eliminação é certa." - Sistema Menor`;
+        }
+
+        this.selectDifficulty('normal');
+        navTo('pre-battle');
+        lucide.createIcons();
+      },
+
+      selectDifficulty: function (diff) {
+        this.difficulty = diff;
+        document.getElementById('btn-diff-easy').classList.remove('active');
+        document.getElementById('btn-diff-normal').classList.remove('active');
+        document.getElementById('btn-diff-hard').classList.remove('active');
+        document.getElementById(`btn-diff-${diff}`).classList.add('active');
+
+        if (diff === 'easy') { this.diffMult = { hp: 0.7, dmg: 0.7, reward: 0.8, dodge: 0.5 }; }
+        else if (diff === 'normal') { this.diffMult = { hp: 1.0, dmg: 1.0, reward: 1.0, dodge: 1.0 }; }
+        else if (diff === 'hard') { this.diffMult = { hp: 1.5, dmg: 1.5, reward: 1.5, dodge: 1.5 }; }
+      },
+
+      confirmBattle: function () {
+        navTo('battle');
+        this.startBattle(this.isBossFight);
+      },
+
+      toggleAutoAttack: function () {
+        this.autoAttack = !this.autoAttack;
+        const btn = document.getElementById('btn-auto-atk');
+        if (this.autoAttack) {
+          btn.classList.add('auto-atk-active');
+          showToast("Auto-Atacar Ligado!");
+        } else {
+          btn.classList.remove('auto-atk-active');
+          showToast("Auto-Atacar Desligado!");
+        }
+      },
+
+      startBattle: function (isBoss) {
+        this.inCombat = true;
+        this.isBossFight = isBoss;
+        this.heroHp = this.getMaxHp();
+        this.fury = 0;
+        this.combo = 0;
+        this.updateComboUI();
+        document.getElementById('boss-warning').classList.toggle('hidden', !isBoss);
+
+        Object.values(this.skills).forEach(s => s.timer = false);
+        document.querySelectorAll('.btn-3d').forEach(b => b.disabled = false);
+        document.querySelectorAll('.cooldown-bar').forEach(bar => bar.style.width = '0%');
+
+        const atkBtn = document.getElementById('btn-atk');
+        atkBtn.classList.remove('ultimate-ready');
+        document.getElementById('atk-btn-text').innerText = "Atacar";
+
+        document.getElementById('hero-sprite-container').innerHTML = `<i data-lucide="${this.getClass().icon}"></i>`;
+        const pet = this.getPet();
+        document.getElementById('pet-sprite-container').innerHTML = pet.id !== 'p_none' ? `<i data-lucide="${pet.icon}"></i>` : '';
+
+        this.spawnMonster();
+        this.updateHpBars();
+        lucide.createIcons();
+
+        this.monsterAtb = 0;
+        this.lastTime = performance.now();
+        if (this.combatFrame) cancelAnimationFrame(this.combatFrame);
+        this.combatFrame = requestAnimationFrame(this.combatTick.bind(this));
+      },
+
+      endBattle: function () {
+        this.inCombat = false;
+        this.autoAttack = false;
+        const btn = document.getElementById('btn-auto-atk');
+        if (btn) btn.classList.remove('auto-atk-active');
+
+        if (this.combatFrame) cancelAnimationFrame(this.combatFrame);
+        const hs = document.getElementById('hero-sprite-container');
+        if (hs) hs.className = "sprite-container transform scale-x-[-1] text-blue-400 sprite-idle z-20";
+        const ms = document.getElementById('monster-sprite-container');
+        if (ms) ms.classList.remove('monster-telegraphing', 'sprite-attack-monster');
+
+        const flash = document.getElementById('flash-overlay');
+        if (flash) flash.classList.remove('flash-screen');
+      },
+
+      flee: function () {
+        this.endBattle();
+        navTo('menu');
+        showToast("Fugiste em segurança para a Base.");
+      },
+
+      spawnMonster: function () {
+        if (this.isBossFight) {
+          const bossData = this.actBosses[this.bossKills];
+          let hp = Math.floor(bossData.baseHp + Math.pow(this.level, 1.5) * bossData.hpMult);
+          let dmg = Math.floor(bossData.baseDmg + Math.pow(this.level, 1.3) * bossData.dmgMult);
+
+          hp = Math.floor(hp * this.diffMult.hp);
+          dmg = Math.floor(dmg * this.diffMult.dmg);
+
+          this.monster = {
+            id: bossData.id, name: bossData.name, icon: bossData.icon, color: bossData.color,
+            maxHp: hp, hp: hp, dmg: dmg, spd: bossData.spd, lvl: this.level + 10, weak: 'none', res: 'none',
+            dodge: 0.15, block: 0.25
+          };
+        } else {
+          const typeIndex = Math.min(Math.floor(Math.random() * (this.level / 20 + 1)), this.monsterTypes.length - 1);
+          const type = this.monsterTypes[Math.floor(Math.random() * (typeIndex + 1))];
+
+          let hp = Math.max(20, Math.floor(Math.pow(this.level, 1.3) * 15 * type.hpMult));
+          let dmg = Math.max(2, Math.floor(Math.pow(this.level, 1.1) * 3 * type.dmgMult));
+
+          hp = Math.floor(hp * this.diffMult.hp);
+          dmg = Math.floor(dmg * this.diffMult.dmg);
+
+          this.monster = {
+            id: type.id, name: type.name, icon: type.icon, color: type.color,
+            maxHp: hp, hp: hp, dmg: dmg, spd: type.spd, lvl: Math.max(1, this.level + Math.floor(Math.random() * 3) - 1),
+            weak: type.weak, res: type.res, dodge: type.dodge || 0.05, block: type.block || 0.1
+          };
+        }
+
+        document.getElementById('monster-sprite-container').innerHTML = `<i data-lucide="${this.monster.icon}"></i>`;
+        const msContainer = document.getElementById('monster-sprite-container');
+        msContainer.className = `sprite-container sprite-idle z-20 ${this.monster.color}`;
+        document.getElementById('monster-name').innerText = this.monster.name;
+        document.getElementById('monster-name').className = `text-xs hud-text-bright truncate ${this.monster.color}`;
+        document.getElementById('monster-lvl').innerText = `Lvl ${this.monster.lvl}`;
+
+        lucide.createIcons();
+        this.updateHpBars();
+      },
+
+      combatTick: function (timestamp) {
+        if (!this.inCombat || !this.monster || this.monster.hp <= 0 || this.heroHp <= 0) return;
+
+        const delta = timestamp - this.lastTime;
+        this.lastTime = timestamp;
+
+        this.monsterAtb += (delta / this.monster.spd) * 100;
+
+        const atbBar = document.getElementById('monster-atb-bar');
+        const msContainer = document.getElementById('monster-sprite-container');
+
+        if (this.monsterAtb >= 100) {
+          this.monsterAtb = 0;
+          this.executeMonsterAttack();
+        } else if (this.monsterAtb > 85) {
+          if (msContainer) msContainer.classList.add('monster-telegraphing');
+          if (atbBar) atbBar.classList.replace('bg-cyan-500', 'bg-red-500');
+        } else {
+          if (msContainer) msContainer.classList.remove('monster-telegraphing');
+          if (atbBar) atbBar.classList.replace('bg-red-500', 'bg-cyan-500');
+        }
+
+        if (atbBar) atbBar.style.width = `${Math.min(100, this.monsterAtb)}%`;
+
+        if (this.autoAttack && !this.skills.atk.timer && this.monster.hp > 0 && this.heroHp > 0) {
+          this.useSkill('atk');
+        }
+
+        if (this.inCombat) {
+          this.combatFrame = requestAnimationFrame(this.combatTick.bind(this));
+        }
+      },
+
+      executeMonsterAttack: function () {
+        const msContainer = document.getElementById('monster-sprite-container');
+        if (msContainer) {
+          msContainer.classList.remove('monster-telegraphing');
+          msContainer.classList.add('sprite-attack-monster');
+          setTimeout(() => { if (msContainer) msContainer.classList.remove('sprite-attack-monster'); }, 500);
+        }
+
+        if (this.isDefending) {
+          this.showDamage("PARRY!", 'dmg-parry');
+          this.addFury(20);
+          this.dealDamageToMonster(Math.floor(this.monster.dmg * 2), 'atk', false);
+          return;
+        }
+
+        if (Math.random() < this.getDodgeChance()) {
+          this.showDamage("Esquivou!", 'dodge');
+          this.addFury(5);
+          return;
+        }
+
+        const armor = this.getArmor();
+        let finalDmg = Math.max(1, Math.floor(this.monster.dmg * (1 - armor.def)));
+
+        this.heroHp -= finalDmg;
+        this.combo = 0;
+        this.updateComboUI();
+        this.addFury(15);
+
+        this.showDamage(finalDmg, 'hero');
+        const heroSprite = document.getElementById('hero-sprite-container');
+        if (heroSprite) heroSprite.classList.add('sprite-hit');
+        document.getElementById('game-container').classList.add('shake-screen');
+
+        setTimeout(() => {
+          if (heroSprite) heroSprite.classList.remove('sprite-hit');
+          const gc = document.getElementById('game-container');
+          if (gc) gc.classList.remove('shake-screen');
+        }, 300);
+
+        this.updateHpBars();
+
+        if (this.heroHp <= 0) {
+          this.heroHp = 0;
+          this.die();
+        }
+      },
+
+      addFury: function (amount) {
+        let gain = amount;
+        if (this.inventory.includes('r_fury')) gain *= 2;
+
+        this.fury = Math.min(100, this.fury + gain);
+        document.getElementById('hero-fury-bar').style.width = `${this.fury}%`;
+
+        const atkBtn = document.getElementById('btn-atk');
+        if (this.fury >= 100 && !atkBtn.classList.contains('ultimate-ready')) {
+          atkBtn.classList.add('ultimate-ready');
+          document.getElementById('atk-btn-text').innerText = "SUPREMO";
+          if (!this.autoAttack) showToast("🔥 FÚRIA MÁXIMA! 🔥", 2000);
+        }
+      },
+
+      updateComboUI: function () {
+        const cDisplay = document.getElementById('combo-display');
+        const cText = document.getElementById('combo-count');
+
+        if (this.combo > 1) {
+          cText.innerText = this.combo;
+          cDisplay.classList.remove('combo-text-anim');
+          void cDisplay.offsetWidth;
+          cDisplay.classList.add('combo-text-anim');
+          cDisplay.style.opacity = '1';
+        } else {
+          cDisplay.style.opacity = '0';
+          cDisplay.classList.remove('combo-text-anim');
+        }
+      },
+
+      die: function () {
+        this.endBattle();
+        let heroSprite = document.getElementById('hero-sprite-container');
+        if (heroSprite) heroSprite.classList.add('sprite-death');
+        setTimeout(() => {
+          navTo('menu');
+          showToast("A tua jornada encontra o fim...");
+          if (heroSprite) heroSprite.classList.remove('sprite-death');
+        }, 1500);
+      },
+
+      skills: {
+        atk: { cd: 600, timer: false },
+        mag: { cd: 3000, timer: false },
+        def: { cd: 6000, timer: false },
+        heal: { cd: 1500, timer: false }
+      },
+
+      useSkill: function (id) {
+        if (!this.inCombat || this.skills[id].timer || this.heroHp <= 0 || this.monster.hp <= 0) return;
+
+        const comboMult = 1 + (Math.min(this.combo, 20) * 0.1);
+        let atkPoder = Math.floor(this.getAtk() * comboMult);
+
+        if (id === 'atk') {
+          if (this.fury >= 100) {
+            this.dealDamageToMonster(atkPoder * 4, 'atk', true);
+            this.fury = 0;
+            this.addFury(0);
+            document.getElementById('btn-atk').classList.remove('ultimate-ready');
+            document.getElementById('atk-btn-text').innerText = "Atacar";
+          } else {
+            let isCrit = Math.random() < this.getCritChance();
+            let dmg = isCrit ? atkPoder * 2 : atkPoder;
+            this.dealDamageToMonster(dmg, 'atk', isCrit);
+            this.addFury(8);
+          }
+          this.combo++;
+          this.updateComboUI();
+          this.animateHero('sprite-attack-hero');
+        }
+        else if (id === 'mag') {
+          let dmg = Math.floor(atkPoder * 2.0); // Magia base
+          this.shootMagicProjectile();
+          setTimeout(() => {
+            this.dealDamageToMonster(dmg, 'mag', false);
+          }, 400);
+          this.combo++;
+          this.updateComboUI();
+          this.animateHero('sprite-attack-hero');
+        }
+        else if (id === 'def') {
+          this.combo = 0;
+          this.updateComboUI();
+          this.isDefending = true;
+          document.getElementById('hero-sprite-container').classList.add('shield-active');
+          this.showDamage("Guarda!", 'dodge');
+          setTimeout(() => {
+            this.isDefending = false;
+            const hs = document.getElementById('hero-sprite-container');
+            if (hs) hs.classList.remove('shield-active');
+          }, 1500);
+        }
+        else if (id === 'heal') {
+          if (this.potions <= 0) {
+            showToast("Sem recursos de cura! Passa na Loja.");
+            return;
+          }
+          this.combo = 0;
+          this.updateComboUI();
+          this.potions--;
+          const maxHp = this.getMaxHp();
+          const healAmount = Math.floor(maxHp * 0.4);
+          this.heroHp = Math.min(maxHp, this.heroHp + healAmount);
+          this.showDamage(`+${formatNumber(healAmount)}`, 'heal');
+          this.updateHpBars();
+        }
+
+        this.startCooldown(id);
+      },
+
+      shootMagicProjectile: function () {
+        const zone = document.getElementById('damage-zone');
+        const proj = document.createElement('i');
+        proj.setAttribute('data-lucide', 'flame');
+        proj.className = 'magic-projectile';
+        zone.appendChild(proj);
+        lucide.createIcons();
+        setTimeout(() => proj.remove(), 400);
+      },
+
+      dealDamageToMonster: function (baseDmg, atkType, isUltimate = false) {
+        if (!this.monster || this.monster.hp <= 0) return;
+
+        let mDodge = this.monster.dodge * this.diffMult.dodge;
+        let mBlock = this.monster.block * this.diffMult.dodge;
+
+        if (Math.random() < mDodge) {
+          this.showDamage("Esquivou!", 'monster-dodge');
+          this.combo = 0;
+          this.updateComboUI();
+          return;
+        }
+
+        let isCrit = Math.random() < this.getCritChance() || isUltimate;
+        let finalDmg = isCrit ? baseDmg * 2 : baseDmg;
+
+        let typeMod = 1;
+        let popMsg = null;
+
+        if (this.monster.weak === atkType) {
+          typeMod = 1.5;
+          popMsg = 'dmg-effective';
+        } else if (this.monster.res === atkType) {
+          typeMod = 0.5;
+          popMsg = 'dmg-resistant';
+        }
+
+        finalDmg = Math.floor(finalDmg * typeMod * (0.9 + Math.random() * 0.2));
+
+        if (Math.random() < mBlock) {
+          finalDmg = Math.floor(finalDmg * 0.4); // Reduz 60%
+          this.showDamage("Defendeu!", 'monster-block');
+        }
+
+        if (finalDmg < 1) finalDmg = 1;
+
+        if (finalDmg > this.maxDmgDealt) this.maxDmgDealt = finalDmg;
+
+        this.monster.hp -= finalDmg;
+
+        if (this.inventory.includes('r_vamp')) {
+          const heal = Math.floor(finalDmg * 0.10);
+          if (heal > 0) {
+            this.heroHp = Math.min(this.getMaxHp(), this.heroHp + heal);
+            this.showDamage(`+${formatNumber(heal)}`, 'heal');
+          }
+        }
+
+        let iconStr = atkType === 'mag' ? '🔥' : '⚔️';
+        let textOut = `${iconStr} -${formatNumber(finalDmg)}`;
+
+        if (popMsg === 'dmg-effective') {
+          this.showDamage("SUPER EFETIVO!", 'dmg-effective');
+          setTimeout(() => this.showDamage(textOut, isCrit ? 'crit' : 'monster'), 200);
+        } else if (popMsg === 'dmg-resistant') {
+          this.showDamage("RESISTENTE...", 'dmg-resistant');
+          setTimeout(() => this.showDamage(textOut, 'monster'), 200);
+        } else {
+          this.showDamage(textOut, isCrit ? 'crit' : 'monster');
+        }
+
+        const sprite = document.getElementById('monster-sprite-container');
+        if (sprite) {
+          sprite.classList.remove('sprite-idle');
+          sprite.classList.add('sprite-hit');
+          setTimeout(() => {
+            sprite.classList.remove('sprite-hit');
+            if (this.monster && this.monster.hp > 0) sprite.classList.add('sprite-idle');
+          }, 300);
+        }
+
+        if (isUltimate) {
+          document.getElementById('game-container').classList.add('shake-heavy');
+          const flash = document.getElementById('flash-overlay');
+          flash.classList.add('flash-screen');
+          setTimeout(() => {
+            document.getElementById('game-container').classList.remove('shake-heavy');
+            flash.classList.remove('flash-screen');
+          }, 500);
+        }
+
+        if (this.monster.hp <= 0) {
+          this.monster.hp = 0;
+          this.killMonster();
+        }
+        this.updateHpBars();
+      },
+
+      animateHero: function (animClass) {
+        const sprite = document.getElementById('hero-sprite-container');
+        if (sprite) {
+          sprite.classList.add(animClass);
+          setTimeout(() => sprite.classList.remove(animClass), 400);
+        }
+      },
+
+      startCooldown: function (id) {
+        const skill = this.skills[id];
+        skill.timer = true;
+        const btn = document.getElementById(`btn-${id}`);
+        const cdBar = document.getElementById(`cd-${id}`);
+
+        btn.disabled = true;
+        cdBar.style.width = '100%';
+
+        let startTime = Date.now();
+        let finalCd = skill.cd;
+        if (this.inventory.includes('r_capacitor')) finalCd *= 0.5;
+        else if (this.inventory.includes('r_time')) finalCd *= 0.8;
+
+        const frame = () => {
+          if (!skill.timer) return;
+          let elapsed = Date.now() - startTime;
+          let pct = 100 - (elapsed / finalCd) * 100;
+
+          if (pct <= 0) {
+            btn.disabled = false;
+            cdBar.style.width = '0%';
+            skill.timer = false;
+          } else {
+            cdBar.style.width = `${pct}%`;
+            requestAnimationFrame(frame);
+          }
+        };
+        requestAnimationFrame(frame);
+      },
+
+      spawnLootIcon: function (iconName, colorClass) {
+        const zone = document.getElementById('damage-zone');
+        const drop = document.createElement('div');
+        drop.className = 'loot-coin';
+        drop.innerHTML = `<i data-lucide="${iconName}" class="${colorClass} w-6 h-6"></i>`;
+
+        const randomX = (Math.random() - 0.5) * 100;
+        drop.style.setProperty('--tx', `${randomX}px`);
+        drop.style.left = `80%`;
+        drop.style.bottom = `40%`;
+
+        zone.appendChild(drop);
+        lucide.createIcons({ root: drop });
+        setTimeout(() => drop.remove(), 800);
+      },
+
+      spawnLoot: function (amount) {
+        const coinsToSpawn = Math.min(amount > 100 ? 5 : 2, 8);
+        for (let i = 0; i < coinsToSpawn; i++) {
+          setTimeout(() => this.spawnLootIcon('coins', 'text-yellow-400 fill-current'), i * 100);
+        }
+      },
+
+      killMonster: function () {
+        const sprite = document.getElementById('monster-sprite-container');
+        if (sprite) {
+          sprite.classList.remove('monster-telegraphing');
+          sprite.classList.add('sprite-death');
+        }
+
+        if (!this.bestiary[this.monster.id]) this.bestiary[this.monster.id] = 0;
+        this.bestiary[this.monster.id]++;
+
+        let xpGain = Math.floor(this.monster.maxHp * 0.4);
+        let goldGain = Math.floor(this.monster.maxHp * 0.35);
+
+        xpGain = Math.floor(xpGain * this.diffMult.reward);
+        goldGain = Math.floor(goldGain * this.diffMult.reward);
+
+        let dropMsg = "";
+        if (this.isBossFight) {
+          xpGain *= 10;
+          goldGain *= 10;
+          this.bossKills++;
+          this.potions += 5;
+          dropMsg = "+5 Poções! (Loot de Boss)";
+          this.spawnLootIcon('flask-round', 'text-emerald-400');
+          showToast("👑 GUARDIÃO DERROTADO! Caminho Aberto!", 4000);
+        } else {
+          if (Math.random() < 0.15) {
+            this.potions += 1;
+            dropMsg = "+1 Poção! (Drop)";
+            this.spawnLootIcon('flask-round', 'text-emerald-400');
+          }
+        }
+
+        if (dropMsg !== "") {
+          setTimeout(() => this.showDamage(dropMsg, 'heal'), 200);
+        }
+
+        if (this.inventory.includes('r_midas')) goldGain = Math.floor(goldGain * 1.5);
+        if (this.inventory.includes('r_xp')) xpGain = Math.floor(xpGain * 1.5);
+        if (this.inventory.includes('r_god')) { goldGain *= 1.5; xpGain *= 1.5; }
+        if (this.inventory.includes('r_dev')) { goldGain *= 2.0; xpGain *= 2.0; }
+
+        this.spawnLoot(goldGain);
+
+        this.xp += xpGain;
+        this.gold += goldGain;
+        this.kills++;
+
+        let leveledUp = false;
+        while (this.xp >= this.xpRequired()) {
+          this.xp -= this.xpRequired();
+          this.level++;
+          if (this.level > this.highestLevel) this.highestLevel = this.level;
+          leveledUp = true;
+          this.potions++;
+        }
+
+        this.save();
+        this.updateUI();
+        this.updateTheme();
+
+        if (leveledUp) {
+          const toast = document.getElementById('level-up-toast');
+          document.getElementById('toast-level-text').innerText = `Nível ${this.level}`;
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.remove('opacity-0', '-translate-y-4'), 50);
+          setTimeout(() => { toast.classList.add('opacity-0', '-translate-y-4'); setTimeout(() => toast.classList.add('hidden'), 500); }, 3000);
+        }
+
+        let playedStory = this.checkStoryMilestones();
+        if (playedStory) {
+          this.inCombat = false;
+          this.autoAttack = false;
+          const btn = document.getElementById('btn-auto-atk');
+          if (btn) btn.classList.remove('auto-atk-active');
+          setTimeout(() => { if (sprite) sprite.classList.remove('sprite-death'); }, 800);
+          return;
+        }
+
+        setTimeout(() => {
+          if (sprite) sprite.classList.remove('sprite-death');
+          if (this.inCombat) {
+            if (this.isBossFight) {
+              navTo('menu');
+            } else {
+              this.monsterAtb = 0;
+              this.spawnMonster();
+              this.lastTime = performance.now();
+              if (this.combatFrame) cancelAnimationFrame(this.combatFrame);
+              this.combatFrame = requestAnimationFrame(this.combatTick.bind(this));
+            }
+          }
+        }, 800);
+      },
+
+      showDamage: function (textOut, type) {
+        const zone = document.getElementById('damage-zone');
+        const popup = document.createElement('div');
+
+        let cssClass = 'dmg-normal';
+        if (type === 'crit') cssClass = 'dmg-crit';
+        if (type === 'heal') cssClass = 'dmg-heal';
+        if (type === 'hero') cssClass = 'dmg-player';
+        if (type === 'dodge') cssClass = 'dmg-dodge';
+        if (type === 'dmg-parry') cssClass = 'dmg-parry';
+        if (type === 'monster') cssClass = 'dmg-warning';
+        if (type === 'dmg-effective') cssClass = 'dmg-effective';
+        if (type === 'dmg-resistant') cssClass = 'dmg-resistant';
+        if (type === 'monster-dodge') cssClass = 'dmg-monster-dodge';
+        if (type === 'monster-block') cssClass = 'dmg-monster-block';
+
+        popup.className = `dmg-popup ${cssClass}`;
+        popup.innerText = textOut;
+
+        const randomX = (Math.random() - 0.5) * 60;
+        let baseLeft = (type === 'hero' || type === 'heal' || type === 'dodge' || type === 'dmg-parry') ? 20 : 80;
+        if (type === 'monster') baseLeft = 80;
+        if (type === 'monster-dodge' || type === 'monster-block') baseLeft = 80;
+
+        popup.style.left = `calc(${baseLeft}% + ${randomX}px)`;
+        popup.style.bottom = `40%`;
+
+        zone.appendChild(popup);
+        setTimeout(() => popup.remove(), 1000);
+      },
+
+      updateHpBars: function () {
+        const maxHp = this.getMaxHp();
+        const heroPct = Math.max(0, (this.heroHp / maxHp) * 100);
+        document.getElementById('hero-hp-bar').style.width = `${heroPct}%`;
+        document.getElementById('hero-hp-text').innerText = `${formatNumber(Math.ceil(this.heroHp))} / ${formatNumber(maxHp)}`;
+
+        if (this.monster) {
+          const monPct = Math.max(0, (this.monster.hp / this.monster.maxHp) * 100);
+          document.getElementById('monster-hp-bar').style.width = `${monPct}%`;
+          document.getElementById('monster-hp-text').innerText = `${formatNumber(Math.ceil(this.monster.hp))} / ${formatNumber(this.monster.maxHp)}`;
+        }
+
+        document.getElementById('btn-potion-count').innerText = formatNumber(this.potions);
+      },
+
+      setShopTab: function (tab) {
+        this.shopTab = tab;
+        ['weapon', 'armor', 'pet', 'relic', 'items', 'theme'].forEach(t => {
+          const el = document.getElementById(`tab-${t}`);
+          if (!el) return;
+          if (t === tab) el.className = 'px-2 py-1.5 text-[10px] sm:text-xs font-bold bg-zinc-700 text-white rounded-lg shadow transition-all whitespace-nowrap';
+          else el.className = 'px-2 py-1.5 text-[10px] sm:text-xs font-bold text-zinc-500 rounded-lg hover:bg-zinc-800 hover:text-zinc-300 transition-all whitespace-nowrap' + (t === 'relic' ? ' text-amber-500' : '') + (t === 'items' ? ' text-emerald-500' : '');
+        });
+        this.renderShop();
+      },
+
+      buyItem: function (id, type) {
+        if (type === 'items') {
+          const item = this.items.find(i => i.id === id);
+          if (this.gold >= item.cost) {
+            this.gold -= item.cost;
+            this.potions += item.qty;
+            this.save(); this.updateUI(); this.renderShop();
+            showToast(`Adquirido: ${item.name}!`);
+          } else { showToast("Não tens Ouro suficiente!"); }
+          return;
+        }
+
+        let list = [];
+        if (type === 'weapon') list = this.weapons;
+        if (type === 'armor') list = this.armors;
+        if (type === 'pet') list = this.pets;
+        if (type === 'theme') list = this.themes;
+        if (type === 'relic') list = this.relics;
+
+        const item = list.find(i => i.id === id);
+
+        if (this.inventory.includes(id)) {
+          if (type === 'weapon') this.eqWeapon = id;
+          if (type === 'armor') this.eqArmor = id;
+          if (type === 'pet') this.eqPet = id;
+          if (type === 'theme') {
+            this.eqTheme = id;
+            this.updateTheme();
+            showToast(`Portal Conectado: ${item.name}`);
+          } else if (type !== 'relic') {
+            showToast(`Equipado: ${item.name}`);
+          }
+          this.save(); this.updateUI(); this.renderShop();
+          return;
+        }
+
+        if (this.gold >= item.cost) {
+          this.gold -= item.cost;
+          this.inventory.push(id);
+          if (type === 'weapon') this.eqWeapon = id;
+          if (type === 'armor') this.eqArmor = id;
+          if (type === 'pet') this.eqPet = id;
+          if (type === 'theme') {
+            this.eqTheme = id;
+            this.updateTheme();
+            showToast(`Novo Domínio Acessado: ${item.name}!`);
+          } else {
+            showToast(`Transação concluída: ${item.name}!`);
+          }
+          this.save(); this.updateUI(); this.renderShop();
+        } else { showToast("Não tens Ouro suficiente!"); }
+      },
+
+      changeClass: function (clsId) {
+        this.eqClass = clsId;
+        this.save();
+        this.updateUI();
+        showToast(`Vocação assumida: ${this.getClass().name}!`);
+        closeModal('tavern-modal');
+      },
+
+      updateUI: function () {
+        const c = this.getClass();
+
+        document.getElementById('menu-hero-name').innerText = this.heroName;
+        if (document.getElementById('battle-hero-name')) document.getElementById('battle-hero-name').innerText = this.heroName;
+        document.getElementById('menu-class-text').innerText = c.name;
+
+        const iconMenu = document.getElementById('menu-class-icon-container');
+        if (iconMenu) iconMenu.innerHTML = `<i data-lucide="${c.icon}" class="w-8 h-8 text-zinc-300 drop-shadow-[0_0_5px_rgba(220,38,38,0.5)]"></i>`;
+
+        document.getElementById('menu-gold').innerText = formatNumber(this.gold);
+        document.getElementById('menu-potions').innerText = formatNumber(this.potions);
+        document.getElementById('menu-dmgt').innerText = `${formatNumber(this.getAtk())} ATK`;
+        document.getElementById('menu-hp').innerText = `${formatNumber(this.getMaxHp())} HP`;
+        document.getElementById('menu-level-text').innerText = this.level;
+        if (document.getElementById('battle-hero-lvl')) document.getElementById('battle-hero-lvl').innerText = `Lvl ${this.level}`;
+
+        const btnBoss = document.getElementById('btn-daily-boss');
+        if (btnBoss) {
+          if (this.bossKills >= this.actBosses.length) {
+            btnBoss.classList.add('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'border-zinc-700');
+            btnBoss.classList.remove('bg-gradient-to-r', 'from-red-950', 'to-red-900', 'border-red-700');
+            btnBoss.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i> <span class="truncate text-emerald-500">Jogo Zerado</span>`;
+          } else {
+            const nextBoss = this.actBosses[this.bossKills];
+            if (this.level < nextBoss.reqLvl) {
+              btnBoss.classList.add('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'border-zinc-700');
+              btnBoss.classList.remove('bg-gradient-to-r', 'from-red-950', 'to-red-900', 'border-red-700');
+              btnBoss.innerHTML = `<i data-lucide="lock" class="w-4 h-4 text-zinc-500 flex-shrink-0"></i> <span class="truncate">Req. Lvl ${nextBoss.reqLvl}</span>`;
+            } else {
+              btnBoss.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'border-zinc-700');
+              btnBoss.classList.add('bg-gradient-to-r', 'from-red-950', 'to-red-900', 'border-red-700');
+              let shortName = nextBoss.name.split(' (')[0];
+              btnBoss.innerHTML = `<i data-lucide="skull" class="w-4 h-4 text-red-500 flex-shrink-0"></i> <span class="truncate">${shortName}</span>`;
+            }
+          }
+        }
+
+        if (document.getElementById('battle-gold-display')) document.getElementById('battle-gold-display').innerText = formatNumber(this.gold);
+        if (document.getElementById('btn-potion-count')) document.getElementById('btn-potion-count').innerText = formatNumber(this.potions);
+        const xpPct = Math.min((this.xp / this.xpRequired()) * 100, 100);
+        if (document.getElementById('battle-xp-bar')) document.getElementById('battle-xp-bar').style.width = `${xpPct}%`;
+        if (document.getElementById('battle-xp-text')) document.getElementById('battle-xp-text').innerText = `${formatNumber(this.xp)} / ${formatNumber(this.xpRequired())}`;
+
+        lucide.createIcons();
+      },
+
+      updateTheme: function () {
+        const themeObj = this.getTheme();
+
+        document.body.className = document.body.className.replace(/theme-\w+/g, '');
+        document.body.classList.add(themeObj.cssClass);
+
+        const bgLayer = document.getElementById('arena-bg-layer');
+        if (bgLayer) {
+          bgLayer.className = `arena-bg-layer ${themeObj.bgClass}`;
+        }
+
+        const menuBadge = document.getElementById('menu-era-badge');
+        if (menuBadge) menuBadge.innerHTML = `<span class="h-[1px] w-6 bg-zinc-700"></span> ${themeObj.name} <span class="h-[1px] w-6 bg-zinc-700"></span>`;
+      },
+
+      updateProfileStats: function () {
+        const w = this.getWeapon();
+        const a = this.getArmor();
+        const p = this.getPet();
+
+        document.getElementById('stat-level').innerText = this.highestLevel;
+        document.getElementById('stat-max-dmg').innerText = formatNumber(this.maxDmgDealt);
+        document.getElementById('stat-kills').innerText = formatNumber(this.kills);
+        document.getElementById('stat-bosses').innerText = formatNumber(this.bossKills);
+
+        document.getElementById('equip-weapon-display').innerHTML = `
+          <i data-lucide="${w.icon}" class="w-5 h-5 text-red-500 mb-1 mx-auto drop-shadow-md"></i>
+          <p class="font-bold text-zinc-300 text-[9px] truncate w-full">${w.name}</p>
+        `;
+        document.getElementById('equip-armor-display').innerHTML = `
+          <i data-lucide="${a.icon}" class="w-5 h-5 text-blue-500 mb-1 mx-auto drop-shadow-md"></i>
+          <p class="font-bold text-zinc-300 text-[9px] truncate w-full">${a.name}</p>
+        `;
+        document.getElementById('equip-pet-display').innerHTML = `
+          <p class="text-[9px] text-zinc-500 mb-1 uppercase font-bold tracking-widest">Apoio</p>
+          <div class="flex items-center justify-center gap-2">
+            <i data-lucide="${p.icon}" class="w-4 h-4 text-purple-500 drop-shadow-md"></i>
+            <span class="font-bold text-zinc-200 text-xs">${p.name}</span>
+          </div>
+        `;
+
+        const campList = document.getElementById('campaign-list');
+        campList.innerHTML = '';
+        this.milestones.forEach(m => {
+          const unlocked = this.seenMilestones.includes(m.id) || (m.id === 'intro' && this.introSeen);
+
+          let reqText = m.reqBosses > 0 ? `Lvl ${m.lvl} + Boss Ato Anterior` : `Lvl ${m.lvl}`;
+          let btn = unlocked ? `<button onclick="rpg.playStory('${m.id}'); closeModal('profile-modal');" class="text-[10px] bg-blue-900/40 text-blue-400 px-2 py-1 rounded">Rever</button>` : `<span class="text-[10px] text-zinc-600 truncate"><i data-lucide="lock" class="w-3 h-3 inline"></i> ${reqText}</span>`;
+
+          campList.innerHTML += `
+            <div class="flex justify-between items-center bg-zinc-900/80 p-2 rounded-lg border border-zinc-800 ${!unlocked ? 'opacity-50' : ''}">
+              <span class="text-xs font-bold text-zinc-300">${m.name}</span>
+              ${btn}
+            </div>
+          `;
+        });
+
+        lucide.createIcons();
+      },
+
+      renderShop: function () {
+        document.getElementById('shop-gold').innerText = formatNumber(this.gold);
+        const list = document.getElementById('shop-items');
+        list.innerHTML = '';
+
+        let itemsToRender = [];
+        let currentEquip = null;
+
+        if (this.shopTab === 'weapon') { itemsToRender = this.weapons; currentEquip = this.eqWeapon; }
+        else if (this.shopTab === 'armor') { itemsToRender = this.armors; currentEquip = this.eqArmor; }
+        else if (this.shopTab === 'pet') { itemsToRender = this.pets; currentEquip = this.eqPet; }
+        else if (this.shopTab === 'theme') { itemsToRender = this.themes; currentEquip = this.eqTheme; }
+        else if (this.shopTab === 'relic') { itemsToRender = this.relics; currentEquip = null; }
+        else if (this.shopTab === 'items') { itemsToRender = this.items; currentEquip = null; }
+
+        itemsToRender.forEach(item => {
+          let btnHTML = '';
+          let isOwned = false;
+          let isEquipped = false;
+
+          if (this.shopTab === 'items') {
+            const canAfford = this.gold >= item.cost;
+            btnHTML = `<button onclick="rpg.buyItem('${item.id}', '${this.shopTab}')" class="px-3 py-1.5 ${canAfford ? 'bg-emerald-700 hover:bg-emerald-600 text-white shadow border border-emerald-500' : 'bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed'} rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">${formatNumber(item.cost)} <i data-lucide="coins" class="w-3 h-3"></i></button>`;
+          } else {
+            isOwned = this.inventory.includes(item.id);
+            isEquipped = currentEquip === item.id;
+            const canAfford = this.gold >= item.cost;
+
+            if (this.shopTab === 'relic' && isOwned) {
+              btnHTML = `<button disabled class="px-2 py-1.5 bg-emerald-900/30 text-emerald-500 rounded-lg text-[10px] font-bold border border-emerald-800">Adquirida</button>`;
+            } else if (isEquipped) {
+              btnHTML = `<button disabled class="px-2 py-1.5 bg-emerald-900/30 text-emerald-500 rounded-lg text-[10px] font-bold border border-emerald-800">Ativo</button>`;
+            } else if (isOwned) {
+              btnHTML = `<button onclick="rpg.buyItem('${item.id}', '${this.shopTab}')" class="px-3 py-1.5 bg-zinc-700 text-white rounded-lg text-xs font-bold hover:bg-zinc-600 transition shadow">${this.shopTab === 'theme' ? 'Viajar' : 'Equipar'}</button>`;
+            } else {
+              btnHTML = `<button onclick="rpg.buyItem('${item.id}', '${this.shopTab}')" class="px-3 py-1.5 ${canAfford ? 'bg-yellow-600 hover:bg-yellow-500 text-white shadow border border-yellow-500' : 'bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed'} rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">${formatNumber(item.cost)} <i data-lucide="coins" class="w-3 h-3"></i></button>`;
+            }
+          }
+
+          let iconName = item.icon || 'globe';
+
+          list.innerHTML += `
+            <div class="flex items-center gap-3 p-2.5 rounded-xl border ${isEquipped || (this.shopTab === 'relic' && isOwned) ? 'border-brand-500 bg-brand-900/10' : 'border-zinc-800 bg-zinc-950/80'} shadow-inner">
+              <div class="p-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-sm"><i data-lucide="${iconName}" class="w-5 h-5 text-zinc-400"></i></div>
+              <div class="flex-1">
+                <h3 class="font-bold text-zinc-200 text-xs leading-tight">${item.name}</h3>
+                <p class="text-[9px] font-bold text-brand-500 mt-0.5 tracking-wider uppercase">${item.desc}</p>
+              </div>
+              <div>${btnHTML}</div>
+            </div>
+          `;
+        });
+        lucide.createIcons();
+      },
+
+      renderBestiary: function () {
+        const list = document.getElementById('bestiary-list');
+        list.innerHTML = '';
+
+        let allTypes = [...this.monsterTypes];
+        this.actBosses.forEach(b => {
+          allTypes.push({ id: b.id, name: b.name, icon: b.icon, color: b.color });
+        });
+
+        allTypes.forEach(m => {
+          const count = this.bestiary[m.id] || 0;
+          const discovered = count > 0;
+
+          list.innerHTML += `
+            <div class="flex items-center gap-4 p-3 rounded-2xl border ${discovered ? 'bg-zinc-950/80 border-zinc-700 shadow-inner' : 'bg-zinc-900/50 border-zinc-800 opacity-50'}">
+              <div class="p-2 bg-zinc-900 border border-zinc-800 shadow-sm rounded-lg">
+                <i data-lucide="${discovered ? m.icon : 'help-circle'}" class="w-6 h-6 ${discovered ? m.color : 'text-zinc-600'}"></i>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-bold text-sm ${discovered ? 'text-zinc-200' : 'text-zinc-600'}">${discovered ? m.name : 'Desconhecido'}</h3>
+                <p class="text-xs text-zinc-500">Eliminações: <span class="font-black text-red-500">${formatNumber(count)}</span></p>
+              </div>
+            </div>
+          `;
+        });
+        lucide.createIcons();
+      },
+
+      renderTavern: function () {
+        const list = document.getElementById('classes-list');
+        list.innerHTML = '';
+
+        Object.values(this.classes).forEach(c => {
+          const isActive = this.eqClass === c.id;
+          const isLocked = this.bossKills < c.reqBosses;
+
+          let btnHTML = '';
+          if (isLocked) {
+            let actName = ["", "Ato II", "Ato III", "DLC 1", "DLC 2", "DLC 3", "DLC 4", "DLC 5", "DLC 6", "DLC 7"][c.reqBosses] || "Ato Desconhecido";
+            btnHTML = `<button disabled class="w-full mt-3 py-2 bg-zinc-800/80 text-zinc-500 rounded-lg text-[10px] font-bold border border-zinc-700/50 uppercase tracking-wide flex items-center justify-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i> Boss ${actName}</button>`;
+          } else if (isActive) {
+            btnHTML = `<button disabled class="w-full mt-3 py-2 bg-emerald-900/30 text-emerald-500 rounded-lg text-xs font-bold border border-emerald-800">Em Uso</button>`;
+          } else {
+            btnHTML = `<button onclick="rpg.changeClass('${c.id}')" class="w-full mt-3 py-2 bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 text-white rounded-lg text-xs font-bold transition shadow">Assumir Manto</button>`;
+          }
+
+          list.innerHTML += `
+            <div class="bg-zinc-950/80 border ${isActive ? 'border-brand-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-zinc-800 shadow-inner'} ${isLocked ? 'opacity-60 grayscale' : ''} rounded-xl p-4 flex flex-col items-center text-center transition-all">
+              <div class="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center shadow-md mb-2 text-zinc-300">
+                <i data-lucide="${c.icon}" class="w-6 h-6 ${isActive ? 'text-brand-400' : ''}"></i>
+              </div>
+              <h3 class="font-black text-zinc-200 text-sm uppercase tracking-wide">${c.name}</h3>
+              <p class="text-[10px] text-zinc-400 mt-1 h-8 font-medium">${c.desc}</p>
+              ${btnHTML}
+            </div>
+          `;
+        });
+        lucide.createIcons();
+      },
+
+      init: function () {
+        if (!this.inventory.includes('t_ruins')) { this.inventory.push('t_ruins'); this.eqTheme = 't_ruins'; }
+        if (!this.inventory.includes('p_none')) { this.inventory.push('p_none'); }
+        if (!this.seenMilestones.includes('intro')) { this.seenMilestones.push('intro'); }
+
+        if (!this.introSeen) { this.playStory('intro'); }
+        else { navTo('menu'); }
+
+        this.updateUI();
+        this.updateTheme();
+      }
+    };
+
+    // Hotkeys para Combate
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('view-battle').classList.contains('active')) return;
+      if (e.key === '1' || e.key.toLowerCase() === 'q') rpg.useSkill('atk');
+      if (e.key === '2' || e.key.toLowerCase() === 'w') rpg.useSkill('mag');
+      if (e.key === '3' || e.key.toLowerCase() === 'e') rpg.useSkill('def');
+      if (e.key === '4' || e.key.toLowerCase() === 'r') rpg.useSkill('heal');
+    });
+
+    // Start
+    rpg.init();
+
+  </script>
+</body>
+
+</html>
