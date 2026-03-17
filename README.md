@@ -1,5 +1,4 @@
-Link do Jogo : https://calcquest-rpg.netlify.app/
-
+Link do Jogo : https://calc-quest-rpg-lendas-de-algoritma.vercel.app/
 
 ⚔️ CalcQuest: Lendas de Algoritma
 
