@@ -1755,41 +1755,121 @@
     .sub-pill svg, .sub-pill i { width: 11px !important; height: 11px !important; }
 
     /* ═══════════════════════════════════════════════════
-       OTIMIZAÇÃO MOBILE — reduz efeitos pesados
+       OTIMIZAÇÃO MOBILE v2 — performance + layout compacto
     ═══════════════════════════════════════════════════ */
     @media (max-width: 600px), (pointer: coarse) {
-      /* Backdrop-filter mais leve */
+
+      /* ── Performance: reduz efeitos pesados ── */
       .glass-panel {
-        backdrop-filter: blur(6px) !important;
-        -webkit-backdrop-filter: blur(6px) !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
       }
-      /* Remove perspectiva 3D que força repaint constante */
       .arena-3d-container {
         perspective: none !important;
         transform-style: flat !important;
       }
-      /* Sombras mais simples */
-      .game-container {
-        box-shadow: 0 0 24px rgba(0,0,0,0.85) !important;
-      }
-      /* Remove scanlines do body (muito pesado em mobile) */
+      .game-container { box-shadow: 0 0 20px rgba(0,0,0,0.8) !important; }
       body::after { display: none !important; }
-      /* Mix-blend-mode causa compositor extra — simplifica */
-      .arena-bg-layer {
-        mix-blend-mode: normal !important;
-        opacity: 0.5 !important;
-      }
-      /* Stage floor 3D — desnecessário em mobile */
+      .arena-bg-layer { mix-blend-mode: normal !important; opacity: 0.5 !important; }
       .stage-floor { display: none !important; }
-      /* Área de toque mínima em botões */
       button, .btn-3d, [onclick] {
         touch-action: manipulation !important;
         -webkit-tap-highlight-color: transparent !important;
       }
-      /* Evita reflow na barra de HP */
-      #hero-hp-bar, #monster-hp-bar {
-        contain: strict;
+      #hero-hp-bar, #monster-hp-bar { contain: strict; }
+      .acc-sub { transition: none !important; }
+      body.low-perf-mode .btn-3d { box-shadow: none !important; text-shadow: none !important; }
+
+      /* ── Layout: oculta elementos que consomem espaço desnecessário ── */
+      /* Título CALCQUEST e era badge — economiza ~70px de altura */
+      #mob-hide-title,
+      #menu-era-badge {
+        display: none !important;
       }
+
+      /* Menu container: menos padding */
+      .menu-container { padding: 10px !important; }
+
+      /* Botões utilitários no topo */
+      .menu-container .absolute.top-3.right-3 {
+        top: 6px !important; right: 6px !important; gap: 4px !important;
+      }
+      .menu-container .absolute.top-3.right-3 button { padding: 5px !important; }
+
+      /* Hero card: mais compacto */
+      .menu-container .rounded-2xl.p-3.mb-4 {
+        margin-bottom: 8px !important;
+        padding: 10px !important;
+      }
+
+      /* Grid de stats: 3 colunas — oculta poções (menos usada no overview) */
+      .menu-stat-box:nth-child(2) { display: none !important; }
+      .grid.grid-cols-4.gap-1\.5 { grid-template-columns: repeat(3, 1fr) !important; }
+      .menu-stat-box { padding: 8px 4px !important; }
+      .menu-stat-box span.stat-text { font-size: 13px !important; }
+      .menu-stat-box svg { width: 11px !important; height: 11px !important; }
+
+      /* Linha notoriety/rep: ocultar no overview */
+      .menu-container .rounded-2xl .flex.items-center.justify-between.mt-2 {
+        display: none !important;
+      }
+
+      /* Botão MASMORRA: maior área de toque */
+      button[onclick="rpg.openPreBattle(false)"] {
+        padding-top: 16px !important;
+        padding-bottom: 16px !important;
+        font-size: 15px !important;
+        margin-bottom: 6px !important;
+      }
+
+      /* Botão Boss: secundário, menor */
+      #btn-daily-boss {
+        padding-top: 7px !important;
+        padding-bottom: 7px !important;
+        margin-bottom: 8px !important;
+        opacity: 0.85;
+      }
+
+      /* Tabs */
+      .menu-tab {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+        font-size: 8px !important;
+        letter-spacing: 0 !important;
+      }
+
+      /* Accordeões */
+      #panel-cidade, #panel-progresso, #panel-modos, #panel-arsenal {
+        gap: 4px !important;
+      }
+      .acc-trigger {
+        padding-top: 9px !important;
+        padding-bottom: 9px !important;
+        font-size: 10px !important;
+      }
+      .sub-pill { padding: 5px 3px !important; font-size: 7px !important; }
+
+      /* Espaço para o dock não bloquear conteúdo */
+      #view-menu { padding-bottom: 64px !important; }
+
+      /* Topbar mobile visível, topbar original oculta */
+      #mob-topbar { display: flex !important; }
+      #mob-hide-title, #menu-era-badge { display: none !important; }
+      /* Botões utilitários menores e reposicionados */
+      #menu-topbar-btns { top: 4px !important; right: 4px !important; gap: 3px !important; }
+      #menu-topbar-btns button { padding: 4px !important; }
+
+      /* Badge de talentos: aparece quando há pontos */
+      #mob-talent-badge { display: flex !important; }
+
+      /* Botão Boss compacto — herda estilos do novo markup */
+      #btn-daily-boss { opacity: 1 !important; }
+
+      /* Stats grid 3 colunas: label abaixo do valor */
+      #menu-stats-grid-3 .menu-stat-box { padding: 8px 4px !important; }
+
+      /* Clock no topbar mobile */
+      #mob-clock { display: block; }
     }
 
     /* ═══ FIX: Banner da Aldeia (living-village.js) ═══
@@ -1859,53 +1939,78 @@
     <div class="menu-container glass-panel w-full p-5 sm:p-6 text-center transition-all duration-500 relative">
 
       <!-- Top utility bar -->
-      <div class="absolute top-3 right-3 flex gap-1.5">
+      <div class="absolute top-3 right-3 flex gap-1.5" id="menu-topbar-btns">
         <button onclick="rpg.toggleLang()" class="p-1.5 rounded-lg bg-black/40 border border-white/10 text-zinc-500 hover:text-white transition-colors" title="Idioma"><i data-lucide="languages" class="w-3.5 h-3.5"></i></button>
         <button onclick="openSettings()"   class="p-1.5 rounded-lg bg-black/40 border border-white/10 text-zinc-500 hover:text-white transition-colors"><i data-lucide="settings" class="w-3.5 h-3.5"></i></button>
         <button onclick="openChangelog()"  class="p-1.5 rounded-lg bg-black/40 border border-white/10 text-zinc-500 hover:text-white transition-colors"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
         <button onclick="toggleFullscreen()" id="btn-fullscreen" class="p-1.5 rounded-lg bg-black/40 border border-white/10 text-zinc-500 hover:text-white transition-colors" title="Tela Cheia"><i data-lucide="maximize" class="w-3.5 h-3.5"></i></button>
         <button onclick="openLore()"       class="p-1.5 rounded-lg bg-black/40 border border-violet-500/20 text-violet-500 hover:text-violet-300 transition-colors"><i data-lucide="scroll-text" class="w-3.5 h-3.5"></i></button>
       </div>
+      <!-- Topbar mobile: localização à esquerda, hora à direita -->
+      <div id="mob-topbar" style="display:none;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 2px;">
+        <span id="mob-location-label" style="font-size:9px;color:#ef4444;font-family:'Orbitron',monospace;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;">⚔ ALDEIA</span>
+        <span id="mob-clock" style="font-size:10px;color:#22d3ee;font-family:'Fira Code',monospace;font-weight:700;"></span>
+      </div>
 
       <!-- Title -->
-      <h1 class="rpg-title text-4xl font-black mb-0.5 mt-5 text-white">CALCQUEST</h1>
+      <h1 class="rpg-title text-4xl font-black mb-0.5 mt-5 text-white" id="mob-hide-title">CALCQUEST</h1>
       <p class="text-[9px] font-bold text-zinc-500 mb-4 uppercase tracking-[0.2em] flex items-center justify-center gap-2" id="menu-era-badge">
         <span class="h-px w-4 bg-zinc-700"></span> Lendas de Algoritma <span class="h-px w-4 bg-zinc-700"></span>
       </p>
 
-      <!-- Hero card -->
-      <div class="rounded-2xl p-3 mb-4 border border-white/5 bg-black/30 text-left shadow-inner">
-        <div class="flex items-center gap-3 mb-3">
-          <div id="menu-class-icon-container" class="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-zinc-300 border border-zinc-700 flex-shrink-0">
-            <i data-lucide="sword" class="w-6 h-6"></i>
+      <!-- Hero card — layout mobile compacto -->
+      <div class="rounded-2xl p-3 mb-3 border border-white/5 bg-black/30 text-left shadow-inner" id="menu-hero-card">
+        <div class="flex items-center gap-3 mb-2">
+          <div id="menu-class-icon-container" class="w-11 h-11 rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-zinc-300 border border-zinc-700 flex-shrink-0">
+            <i data-lucide="sword" class="w-5 h-5"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <h2 id="menu-hero-name" class="stat-text font-black text-base uppercase tracking-wide truncate">Herói</h2>
-            <p class="text-[10px] text-zinc-400 font-bold uppercase">Lvl <span id="menu-level-text" class="text-red-400">1</span> · <span id="menu-class-text">Guerreiro</span></p>
+            <h2 id="menu-hero-name" class="stat-text font-black text-sm uppercase tracking-wide truncate">Herói</h2>
+            <p class="text-[9px] text-zinc-400 font-bold uppercase">
+              <span id="menu-class-text">Guerreiro</span>
+              <span class="text-zinc-600 mx-1">·</span>
+              <span id="menu-level-label-inline" class="text-zinc-500">LVL</span>
+              <span id="menu-level-text" class="text-cyan-400 font-black">1</span>
+            </p>
             <p id="hero-title-badge" class="text-[8px] font-black text-amber-400 uppercase tracking-widest"></p>
           </div>
-        </div>
-        <div class="grid grid-cols-4 gap-1.5">
-          <div class="menu-stat-box rounded-lg p-2 flex flex-col items-center gap-0.5">
-            <i data-lucide="coins" class="w-3.5 h-3.5 text-yellow-500"></i>
-            <span id="menu-gold" class="stat-text text-[11px] font-bold leading-tight">0</span>
-          </div>
-          <div class="menu-stat-box rounded-lg p-2 flex flex-col items-center gap-0.5">
-            <i data-lucide="flask-round" class="w-3.5 h-3.5 text-emerald-500"></i>
-            <span id="menu-potions" class="stat-text text-[11px] font-bold leading-tight">5</span>
-          </div>
-          <div class="menu-stat-box rounded-lg p-2 flex flex-col items-center gap-0.5">
-            <i data-lucide="swords" class="w-3.5 h-3.5 text-red-500"></i>
-            <span id="menu-dmgt" class="stat-text text-[11px] font-bold leading-tight">10</span>
-          </div>
-          <div class="menu-stat-box rounded-lg p-2 flex flex-col items-center gap-0.5">
-            <i data-lucide="heart" class="w-3.5 h-3.5 text-green-500"></i>
-            <span id="menu-hp" class="stat-text text-[11px] font-bold leading-tight">100</span>
+          <!-- Badge de talentos disponíveis -->
+          <div id="mob-talent-badge" style="display:none;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;">
+            <span style="font-size:9px;color:#e879f9;font-weight:900;font-family:'Orbitron',monospace;">⚡ <span id="mob-talent-count">0</span> talentos</span>
+            <span style="font-size:7px;color:rgba(148,163,184,0.5);">para gastar</span>
           </div>
         </div>
-        <div class="flex items-center justify-between mt-2 px-0.5">
-          <span class="text-[8px] text-zinc-600"><span id="notoriety-icon">👤</span> <span id="notoriety-name" class="text-zinc-500">Desconhecido</span></span>
-          <span class="text-[8px] text-zinc-600">⭐ <span id="class-rep-label" class="text-zinc-500"></span></span>
+
+        <!-- Stats: ATK · HP · Ouro (3 principais) -->
+        <div class="grid grid-cols-3 gap-1.5" id="menu-stats-grid-3">
+          <div class="menu-stat-box rounded-lg p-2 flex flex-col items-center gap-0.5">
+            <i data-lucide="swords" class="w-3 h-3 text-red-500"></i>
+            <span id="menu-dmgt" class="stat-text text-[13px] font-bold leading-tight">10</span>
+            <span class="text-[7px] text-zinc-600 uppercase tracking-wide">ATK</span>
+          </div>
+          <div class="menu-stat-box rounded-lg p-2 flex flex-col items-center gap-0.5">
+            <i data-lucide="heart" class="w-3 h-3 text-green-500"></i>
+            <span id="menu-hp" class="stat-text text-[13px] font-bold leading-tight">100</span>
+            <span class="text-[7px] text-zinc-600 uppercase tracking-wide">HP</span>
+          </div>
+          <div class="menu-stat-box rounded-lg p-2 flex flex-col items-center gap-0.5">
+            <i data-lucide="coins" class="w-3 h-3 text-yellow-500"></i>
+            <span id="menu-gold" class="stat-text text-[13px] font-bold leading-tight">0</span>
+            <span class="text-[7px] text-zinc-600 uppercase tracking-wide">Ouro</span>
+          </div>
+        </div>
+        <!-- Poções mantidas ocultas no DOM para compatibilidade com game.js -->
+        <span id="menu-potions" style="display:none;">5</span>
+
+        <!-- Barra de XP -->
+        <div style="margin-top:8px;">
+          <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;">
+            <div id="mob-xp-bar-fill" style="height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width 0.4s ease;will-change:width;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:8px;color:rgba(148,163,184,0.45);margin-top:2px;font-family:'Fira Code',monospace;">
+            <span id="mob-xp-text">XP 0%</span>
+            <span id="mob-xp-next">→ LVL 2</span>
+          </div>
         </div>
       </div>
 
@@ -1913,9 +2018,12 @@
       <button onclick="rpg.openPreBattle(false)" class="btn-3d w-full py-4 rounded-xl bg-gradient-to-r from-red-800 to-red-600 border border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-white font-black text-base uppercase tracking-widest flex items-center justify-center gap-2 mb-2">
         <i data-lucide="swords" class="w-5 h-5"></i> <span data-i18n="enter_dungeon">Entrar na Masmorra</span>
       </button>
-      <button onclick="rpg.openPreBattle(true)" id="btn-daily-boss" class="btn-3d w-full py-2 rounded-lg bg-gradient-to-r from-red-950 to-red-900 border border-red-800 text-red-200 font-bold uppercase text-[10px] flex items-center justify-center gap-1.5 mb-4 shadow-[0_0_10px_rgba(153,27,27,0.6)]">
-        <i data-lucide="skull" class="w-3.5 h-3.5 text-red-500"></i>
-        <span id="btn-boss-text" data-i18n="boss">Boss</span>
+      <!-- Botão Boss / Masmorra Avançada — secundário e compacto -->
+      <button onclick="rpg.openPreBattle(true)" id="btn-daily-boss" class="w-full py-2 rounded-lg border text-zinc-500 font-bold uppercase text-[9px] flex items-center justify-center gap-1.5 mb-3 transition-colors" style="background:rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.06);">
+        <i data-lucide="lock" class="w-3 h-3" id="btn-boss-lock-icon"></i>
+        <i data-lucide="skull" class="w-3 h-3 text-red-500" id="btn-boss-skull-icon" style="display:none;"></i>
+        <span id="btn-boss-text" data-i18n="boss">Masmorra avançada</span>
+        <span id="btn-boss-req" style="color:rgba(148,163,184,0.4);font-size:8px;">· req. LVL 20</span>
       </button>
 
       <!-- ═══ TABS ═══ -->
@@ -3085,6 +3193,9 @@
   <script src="modules/post-game-region.js"></script>
   <script src="modules/living-village.js"></script>
   <script src="modules/alchemy-system.js"></script>
+  <script src="modules/boss-parts-destructible.js"></script>
+  <script src="modules/ui-live-sync.js"></script>
+  <script src="modules/session-stats.js"></script>
     <script>
     // TAB SYSTEM
     function switchTab(tab) {
