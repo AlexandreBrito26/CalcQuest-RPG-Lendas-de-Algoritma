@@ -1792,6 +1792,55 @@
       }
     }
 
+    /* ═══ FIX: Banner da Aldeia (living-village.js) ═══
+       Substitui o fundo vermelho agressivo por estilo sutil */
+    #village-status-bar,
+    [id*="village"][id*="bar"],
+    [id*="village"][id*="status"],
+    [id*="village"][id*="banner"],
+    [class*="village-status"],
+    [class*="village-bar"],
+    .living-village-bar {
+      background: rgba(0,0,0,0.55) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 8px !important;
+      font-size: 9px !important;
+      padding: 4px 10px !important;
+      margin-bottom: 6px !important;
+      color: rgba(200,200,220,0.8) !important;
+      text-align: center !important;
+      letter-spacing: 0.08em !important;
+      font-weight: 700 !important;
+      box-shadow: none !important;
+      max-height: 28px !important;
+      overflow: hidden !important;
+    }
+
+    /* FIX: qualquer elemento de status no topo da view-menu
+       que nao seja o menu-container recebe estilo compacto */
+    #view-menu > *:not(.menu-container) {
+      background: rgba(0,0,0,0.5) !important;
+      border: 1px solid rgba(255,255,255,0.07) !important;
+      border-radius: 8px !important;
+      margin-bottom: 6px !important;
+      font-size: 9px !important;
+      padding: 4px 10px !important;
+      color: rgba(180,180,200,0.85) !important;
+      box-shadow: none !important;
+      max-height: 32px !important;
+      overflow: hidden !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    /* FIX: unified-dock duplicado — oculta via CSS como segurança extra */
+    #unified-dock ~ #unified-dock,
+    .unified-dock-bar ~ .unified-dock-bar,
+    .quick-dock ~ .quick-dock {
+      display: none !important;
+    }
+
   </style>
   <div id="app-shell">
   <div id="game-panel">
@@ -2092,7 +2141,7 @@
     </div>
   </section>
 
-  <section id="view-battle" class="view-section w-full px-2 sm:px-4 flex-col items-center justify-center min-h-screen py-6 relative">
+  <section id="view-battle" class="view-section w-full px-2 sm:px-4 flex-col items-center justify-center min-h-screen py-6 relative" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
     <div id="flash-overlay" class="fixed inset-0 pointer-events-none z-50"></div>
     <div id="level-up-toast" class="fixed top-12 transform transition-all duration-500 hidden opacity-0 -translate-y-4 bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-black px-8 py-4 rounded-xl shadow-[0_10px_30px_rgba(245,158,11,0.6)] border border-yellow-300 z-[100] text-center uppercase tracking-widest">
       <span class="block text-[10px] opacity-90 mb-1" data-i18n="power_increased">Poder Aumentado!</span>
@@ -3012,24 +3061,30 @@
   <script src="modules/ui-improvements.js"></script>
   <script src="modules/combat-hud.js"></script>
   <script src="modules/combat-fix.js"></script>
+  <script src="modules/combat-master-fix.js"></script>
+  <script src="modules/combat-elements.js"></script>
   <script src="modules/dungeon-fix.js"></script>
   <script src="modules/profile-button.js"></script>
   <script src="modules/buttons-fix.js"></script>
   <script src="modules/save-system.js"></script>
   <script src="modules/quest-tracker.js"></script>
   <script src="modules/inventory-ui.js"></script>
-  <script src="modules/ng-plus-v2.js"></script>
-  <script src="modules/class-synergy.js"></script>
-  <script src="modules/combat-elements.js"></script>
+  <script src="modules/ng-plus-v3.js"></script>
   <script src="modules/hero-diary.js"></script>
   <script src="modules/world-map.js"></script>
   <script src="modules/damage-numbers.js"></script>
   <script src="modules/achievement-notifications.js"></script>
   <script src="modules/bestiary-enhanced.js"></script>
   <script src="modules/weather-system.js"></script>
+  <script src="modules/day-night-effects.js"></script>
   <script src="modules/game-over.js"></script>
   <script src="modules/mobile-optimizer.js"></script>
   <script src="modules/codex-lore.js"></script>
+  <script src="modules/unified-dock.js"></script>
+  <script src="modules/monster-evolution.js"></script>
+  <script src="modules/post-game-region.js"></script>
+  <script src="modules/living-village.js"></script>
+  <script src="modules/alchemy-system.js"></script>
     <script>
     // TAB SYSTEM
     function switchTab(tab) {
@@ -4808,5 +4863,68 @@
     });
   </script>
 
+  <script>
+  // ── BATTLE FIX: garante que dock não bloqueia botões de batalha ──
+  (function battleFix() {
+    function applyFix() {
+      if (typeof rpg === 'undefined' || !rpg.startBattle) {
+        setTimeout(applyFix, 300); return;
+      }
+
+      // Patch startBattle: adiciona classe in-battle ao body
+      var _sb = rpg.startBattle.bind(rpg);
+      rpg.startBattle = function(isBoss) {
+        document.body.classList.add('in-battle');
+        // Garante botões de batalha habilitados ao iniciar
+        ['btn-atk','btn-mag','btn-def','btn-heal','btn-class5'].forEach(function(id) {
+          var b = document.getElementById(id);
+          if (b) { b.disabled = false; b.style.pointerEvents = ''; b.style.opacity = ''; }
+        });
+        _sb.call(this, isBoss);
+      };
+
+      // Patch endBattle: remove classe in-battle
+      var _eb = rpg.endBattle.bind(rpg);
+      rpg.endBattle = function() {
+        document.body.classList.remove('in-battle');
+        _eb.call(this);
+      };
+
+      // Patch flee também
+      if (rpg.flee) {
+        var _fl = rpg.flee.bind(rpg);
+        rpg.flee = function() {
+          document.body.classList.remove('in-battle');
+          _fl.call(this);
+        };
+      }
+
+      // Segurança: se sair da view-battle via navTo, remove a classe
+      var _nav = window.navTo;
+      if (_nav) {
+        window.navTo = function(view, b) {
+          if (view !== 'battle') document.body.classList.remove('in-battle');
+          if (view === 'battle') document.body.classList.add('in-battle');
+          _nav(view, b);
+        };
+      }
+
+      // Watchdog: a cada 2s verifica se está em batalha real mas sem a classe
+      setInterval(function() {
+        var inBattle = document.getElementById('view-battle') &&
+                       document.getElementById('view-battle').classList.contains('active');
+        if (inBattle && !document.body.classList.contains('in-battle')) {
+          document.body.classList.add('in-battle');
+        }
+        if (!inBattle && document.body.classList.contains('in-battle')) {
+          document.body.classList.remove('in-battle');
+        }
+      }, 2000);
+
+      console.log('[BattleFix] OK — dock escondido durante batalha');
+    }
+    applyFix();
+  })();
+  </script>
 </body>
 </html>

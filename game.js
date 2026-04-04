@@ -4038,10 +4038,13 @@ rpg.skills = {
 };
 
 rpg.useSkill = function (id) {
+  // Defensive check: garante que o combate está ativo e monstro existe
   if (
     !this.inCombat ||
+    !this.skills[id] ||
     this.skills[id].timer ||
     this.heroHp <= 0 ||
+    !this.monster ||
     this.monster.hp <= 0
   )
     return;
@@ -4243,11 +4246,13 @@ rpg.startCooldown = function (id) {
     let pct = 100 - (elapsed / finalCd) * 100;
 
     if (pct <= 0) {
-      btn.disabled = false;
-      cdBar.style.width = "0%";
+      // Re-fetch button in case DOM changed
+      const _btn = document.getElementById("btn-"+id);
+      if (_btn) { _btn.disabled = false; _btn.style.pointerEvents = ''; _btn.style.opacity = ''; }
+      if (cdBar) cdBar.style.width = "0%";
       skill.timer = false;
     } else {
-      cdBar.style.width = `${pct}%`;
+      if (cdBar) cdBar.style.width = `${pct}%`;
       requestAnimationFrame(frame);
     }
   };
@@ -4447,22 +4452,41 @@ rpg.showDamage = function (textOut, type) {
 };
 
 rpg.updateHpBars = function () {
-  const maxHp = this.getMaxHp();
-  const heroPct = Math.max(0, (this.heroHp / maxHp) * 100);
-  document.getElementById("hero-hp-bar").style.width = `${heroPct}%`;
-  document.getElementById("hero-hp-text").innerText =
-    `${formatNumber(Math.ceil(this.heroHp))} / ${formatNumber(maxHp)}`;
+  const maxHp = Math.max(1, this.getMaxHp());
+  const curHp = Math.max(0, this.heroHp || 0);
+  // Garante que a largura fica entre 0% e 100% — fix do bug HUD não diminuir
+  const heroPct = Math.min(100, Math.max(0, (curHp / maxHp) * 100));
+
+  const heroBar = document.getElementById("hero-hp-bar");
+  const heroTxt = document.getElementById("hero-hp-text");
+  if (heroBar) {
+    heroBar.style.width = heroPct + "%";
+    // Cor dinâmica: verde > amarelo > vermelho conforme HP
+    if (heroPct > 60) {
+      heroBar.style.background = "linear-gradient(90deg, #059669, #34d399)";
+      heroBar.style.boxShadow  = "0 0 8px rgba(52,211,153,0.4)";
+    } else if (heroPct > 30) {
+      heroBar.style.background = "linear-gradient(90deg, #b45309, #fbbf24)";
+      heroBar.style.boxShadow  = "0 0 8px rgba(251,191,36,0.5)";
+    } else {
+      heroBar.style.background = "linear-gradient(90deg, #991b1b, #ef4444)";
+      heroBar.style.boxShadow  = "0 0 10px rgba(239,68,68,0.7)";
+    }
+  }
+  if (heroTxt) heroTxt.innerText = formatNumber(Math.ceil(curHp)) + " / " + formatNumber(maxHp);
 
   if (this.monster) {
-    const monPct = Math.max(0, (this.monster.hp / this.monster.maxHp) * 100);
-    document.getElementById("monster-hp-bar").style.width = `${monPct}%`;
-    document.getElementById("monster-hp-text").innerText =
-      `${formatNumber(Math.ceil(this.monster.hp))} / ${formatNumber(this.monster.maxHp)}`;
+    const monMax = Math.max(1, this.monster.maxHp || 1);
+    const monCur = Math.max(0, this.monster.hp || 0);
+    const monPct = Math.min(100, Math.max(0, (monCur / monMax) * 100));
+    const monBar = document.getElementById("monster-hp-bar");
+    const monTxt = document.getElementById("monster-hp-text");
+    if (monBar) monBar.style.width = monPct + "%";
+    if (monTxt) monTxt.innerText = formatNumber(Math.ceil(monCur)) + " / " + formatNumber(monMax);
   }
 
-  document.getElementById("btn-potion-count").innerText = formatNumber(
-    this.potions,
-  );
+  const potBtn = document.getElementById("btn-potion-count");
+  if (potBtn) potBtn.innerText = formatNumber(this.potions);
 };
 
 rpg.setShopTab = function (tab) {
@@ -9426,7 +9450,13 @@ rpg.applyHudSkin = function() {
   const hp = document.getElementById("hero-hp-bar");
   const fury = document.getElementById("hero-fury-bar");
   const atb  = document.getElementById("monster-atb-bar");
-  if (hp)   hp.className   = `bg-gradient-to-r ${skin.hp} h-full transition-all duration-300`;
+  // FIX: preserva o style.width inline ao trocar className
+  // Antes o className resetava a barra para 100% visualmente
+  if (hp) {
+    const savedWidth = hp.style.width; // guarda largura atual
+    hp.className = `bg-gradient-to-r ${skin.hp} h-full transition-all duration-300`;
+    if (savedWidth) hp.style.width = savedWidth; // restaura
+  }
   if (fury) fury.className = `bg-gradient-to-r ${skin.fury} h-full transition-all duration-300`;
   if (atb && !atb.classList.contains("bg-red-500")) atb.className = `${skin.atb} h-full shadow-[0_0_5px_current]`;
 };
@@ -12351,7 +12381,12 @@ rpg.applyHudTheme = function() {
   const themeClass = document.body.className.match(/theme-\w+/)?.[0] || "theme-medieval";
   const hud = this.THEME_HUD[themeClass] || this.THEME_HUD["theme-medieval"];
   const hpBar = document.getElementById("hero-hp-bar");
-  if (hpBar) hpBar.className = "bg-gradient-to-r " + hud.hp + " h-full transition-all duration-300";
+  // FIX: preserva width inline ao trocar className do tema
+  if (hpBar) {
+    const savedWidth = hpBar.style.width;
+    hpBar.className = "bg-gradient-to-r " + hud.hp + " h-full transition-all duration-300";
+    if (savedWidth) hpBar.style.width = savedWidth;
+  }
   const furyBar = document.getElementById("hero-fury-bar");
   if (furyBar) furyBar.className = "bg-gradient-to-r " + hud.fury + " h-full transition-all duration-300";
   const xpBar = document.getElementById("battle-xp-bar");
