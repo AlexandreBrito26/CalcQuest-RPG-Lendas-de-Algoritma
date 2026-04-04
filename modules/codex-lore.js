@@ -1032,7 +1032,7 @@
   let _currentFilter = 'todos';
 
   function buildCodexUI() {
-    // Overlay
+    // Overlay apenas — sem botão flutuante (gerenciado pelo unified-dock.js)
     const overlay = document.createElement('div');
     overlay.id = 'codex-overlay';
     overlay.innerHTML = `
@@ -1059,13 +1059,7 @@
     `;
     overlay.addEventListener('click', e => { if (e.target === overlay) closeCodex(); });
     document.body.appendChild(overlay);
-
-    // Botão de acesso rápido
-    const btn = document.createElement('div');
-    btn.id = 'codex-quick-btn';
-    btn.innerHTML = `📜<span id="codex-new-badge">0</span>`;
-    btn.onclick = openCodex;
-    document.body.appendChild(btn);
+    // Botão flutuante removido — usar unified-dock.js
   }
 
   function renderCodex() {
