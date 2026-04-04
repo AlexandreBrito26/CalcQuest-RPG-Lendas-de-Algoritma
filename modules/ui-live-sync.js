@@ -96,7 +96,7 @@
     if (wd) wd.classList.toggle('hidden', !r.wandererActive);
   }
 
-  // ── Polling loop (500ms) ──────────────────────────────────────
+  // ── Polling loop (1000ms) ──────────────────────────────────────
   // Leve: só chama updateUI se algo mudou de facto
   function startPolling() {
     _last = snapshot();
@@ -104,7 +104,7 @@
       try {
         if (stateChanged()) forceUpdate();
       } catch(e) {}
-    }, 500);
+    }, 1000); // era 500ms — dobrado para reduzir carga de CPU
   }
 
   // ── Patch: funções que mudam estado sem chamar updateUI ────────
