@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalcQuest — Lendas de Algoritma · Changelog</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:    #c9a84c;
+    --gold-lt: #f0d080;
+    --gold-dk: #7a5e20;
+    --blood:   #8b1a1a;
+    --blood-lt:#d44;
+    --ink:     #0a0a0f;
+    --parchment: #1a1610;
+    --panel:   #12100e;
+    --border:  #2e2518;
+    --text:    #c8b98a;
+    --muted:   #6b5e3e;
+    --new:     #4caf80;
+    --fix:     #5b9bd5;
+    --tweak:   #c9a84c;
+    --remove:  #d44;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Background atmosphere ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 60% at 80% 80%, rgba(139,26,26,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 10% 50%, rgba(91,155,213,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* noise overlay */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 72px 0 48px;
+    position: relative;
+  }
+
+  .crest {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 24px rgba(201,168,76,0.5));
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+
+  .game-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: clamp(28px, 6vw, 52px);
+    color: var(--gold-lt);
+    letter-spacing: 0.06em;
+    text-shadow:
+      0 0 40px rgba(201,168,76,0.4),
+      0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.1;
+  }
+
+  .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(11px, 2.5vw, 15px);
+    color: var(--muted);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 28px auto;
+    max-width: 400px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dk), transparent);
+  }
+  .divider-gem {
+    color: var(--gold);
+    font-size: 14px;
+  }
+
+  .header-desc {
+    font-size: 15px;
+    color: var(--muted);
+    font-style: italic;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 48px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 14px 0;
+    background: linear-gradient(to bottom, rgba(10,10,15,0.95) 80%, transparent);
+    backdrop-filter: blur(4px);
+  }
+
+  .filter-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+  .filter-btn:hover { border-color: var(--gold-dk); color: var(--gold); }
+  .filter-btn.active {
+    background: rgba(201,168,76,0.12);
+    border-color: var(--gold);
+    color: var(--gold-lt);
+  }
+
+  /* ── Version blocks ── */
+  .version-block {
+    margin-bottom: 56px;
+    position: relative;
+    transition: opacity 0.3s;
+  }
+  .version-block.hidden { display: none; }
+
+  /* timeline line */
+  .version-block::before {
+    content: '';
+    position: absolute;
+    left: -32px; top: 28px; bottom: -28px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--gold-dk), transparent);
+  }
+
+  .version-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  /* timeline dot */
+  .version-header::before {
+    content: '';
+    position: absolute;
+    left: -38px; top: 50%;
+    transform: translateY(-50%);
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--gold-dk);
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.4);
+  }
+
+  .version-num {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: clamp(22px, 4vw, 32px);
+    color: var(--gold-lt);
+    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+    line-height: 1;
+  }
+
+  .version-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(13px, 2.5vw, 17px);
+    color: var(--gold);
+    font-weight: 400;
+    letter-spacing: 0.06em;
+  }
+
+  .version-date {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    margin-left: auto;
+  }
+
+  .version-desc {
+    font-size: 15px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 20px;
+    padding-left: 1px;
+    border-left: 2px solid var(--gold-dk);
+    padding-left: 12px;
+  }
+
+  /* entry list */
+  .entries {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .entry {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .entry:hover {
+    background: rgba(201,168,76,0.05);
+    border-color: var(--border);
+    transform: translateX(4px);
+  }
+
+  .tag {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 3px 7px;
+    border-radius: 2px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+  .tag-new    { background: rgba(76,175,128,0.15); color: var(--new);   border: 1px solid rgba(76,175,128,0.3); }
+  .tag-fix    { background: rgba(91,155,213,0.15); color: var(--fix);   border: 1px solid rgba(91,155,213,0.3); }
+  .tag-tweak  { background: rgba(201,168,76,0.12); color: var(--tweak); border: 1px solid rgba(201,168,76,0.25); }
+  .tag-remove { background: rgba(212,68,68,0.12);  color: var(--remove);border: 1px solid rgba(212,68,68,0.25); }
+  .tag-perf   { background: rgba(180,120,255,0.12);color: #b478ff;      border: 1px solid rgba(180,120,255,0.25); }
+
+  .entry-text { font-size: 15.5px; line-height: 1.5; color: var(--text); }
+  .entry-text strong { color: var(--gold-lt); font-weight: 600; }
+  .entry-text em     { color: var(--muted); font-style: italic; }
+
+  /* section dividers inside version */
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 16px 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Latest badge ── */
+  .latest-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    padding: 3px 10px;
+    background: linear-gradient(135deg, var(--blood) 0%, #5a0f0f 100%);
+    color: #ffa0a0;
+    border: 1px solid var(--blood-lt);
+    border-radius: 2px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    margin-left: 10px;
+    animation: pulse-red 2s ease-in-out infinite;
+  }
+  @keyframes pulse-red {
+    0%,100% { box-shadow: 0 0 6px rgba(212,68,68,0.3); }
+    50%      { box-shadow: 0 0 14px rgba(212,68,68,0.6); }
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 32px 0;
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  footer a { color: var(--gold-dk); text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--ink); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dk); border-radius: 3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .wrap { padding: 0 16px 60px; }
+    .version-block::before { left: -20px; }
+    .version-header::before { left: -26px; width: 10px; height: 10px; }
+    .filter-bar { gap: 6px; }
+    .filter-btn { padding: 5px 11px; font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="crest">⚔️</span>
+    <h1 class="game-title">CalcQuest</h1>
+    <p class="subtitle">Lendas de Algoritma · Registro de Atualizações</p>
+    <div class="divider"><span class="divider-gem">✦</span></div>
+    <p class="header-desc">Cada versão é um capítulo novo na lenda de Algoritma. Aqui estão todas as batalhas travadas para tornar este mundo mais vivo.</p>
+  </header>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">⚔ Todas</button>
+    <button class="filter-btn" data-filter="new">✦ Novo</button>
+    <button class="filter-btn" data-filter="fix">🛡 Correções</button>
+    <button class="filter-btn" data-filter="tweak">⚗ Ajustes</button>
+    <button class="filter-btn" data-filter="perf">⚡ Performance</button>
+  </div>
+
+  <!-- ═══════════════════════════ v23 ═══════════════════════════ -->
+  <div class="version-block" data-version="v23">
+    <div class="version-header">
+      <span class="version-num">v23.0</span>
+      <span class="version-name">A Ascensão das Masterclasses</span>
+      <span class="latest-badge">Mais Recente</span>
+      <span class="version-date">Abr 2026</span>
+    </div>
+    <p class="version-desc">O maior salto de progressão do jogo. Classes evoluem além do limite, e o pós-jogo ganha estrutura própria.</p>
+
+    <div class="section-label">Sistemas Novos</div>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Subclasses / Masterclasses / God Classes</strong> — 3 camadas de evolução de classe com bônus exclusivos de ATK, HP, Crit e Dodge. Desbloqueadas por boss kills acumuladas.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Temporada de Arena</strong> — Ranking semanal competitivo com pontuação e recompensas sazonais.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Legados</strong> — Herança de bônus entre ciclos de NG+. Cada presságio deixa uma marca permanente no herói.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Banco de Algoritma</strong> — Ouro depositado gera juros passivos ao longo do tempo.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Modo Infinito</strong> — Desbloqueado após NG+4. Inimigos escalam infinitamente; teste o limite do seu build.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Selos de Coleção</strong> — Cosméticos desbloqueáveis que modificam a aparência do HUD e dos menus.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Eventos Globais de Mundo</strong> — Eventos que afetam todos os jogadores simultaneamente com bônus especiais e inimigos únicos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>O Protocolo Primordial</strong> — Boss final verdadeiro. Desbloqueado apenas após completar todos os outros conteúdos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Memórias de Habilidade</strong> — Habilidades usadas com frequência ganham potência adicional permanente ao longo de ciclos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>HUD Dinâmico por Tema</strong> — Interface muda visualmente conforme a região/bioma atual do herói.</span></div>
+    </div>
+
+    <div class="section-label">Correções</div>
+    <div class="entries">
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>Loop infinito em killMonster</strong> — Wrapper intermediário <em>_origKillAdvCheck</em> criava recursão via <em>_ORIG_killMonster</em>. Removido; <em>checkAdvancedClasses</em> agora é chamado diretamente no hook consolidado.</span></div>
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>Bônus de classes avançadas ignorados</strong> — Patches intermediários de <em>getAtk / getMaxHp / getCritChance / getDodgeChance</em> eram sobrescritos pelas funções definitivas. Bônus agora inseridos diretamente nessas funções.</span></div>
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>Tela preta no boot</strong> — Causada pelos dois bugs acima. Jogo agora inicializa sem erros de JavaScript.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ v22 ═══════════════════════════ -->
+  <div class="version-block" data-version="v22">
+    <div class="version-header">
+      <span class="version-num">v22.0</span>
+      <span class="version-name">O Caos e a Glória</span>
+      <span class="version-date">Mar 2026</span>
+    </div>
+    <p class="version-desc">Sistemas de meta-progressão, identidade do herói e o início do conteúdo pós-game.</p>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Notoriedade</strong> — Herói ganha reputação no mundo conforme derrota bosses. Afeta preços, diálogos e eventos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Clima de Batalha</strong> — 7 tipos de clima com efeitos reais em combate: tempestade (penalidade de magia), lua cheia (buffa mortos-vivos), etc.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Reputação de Classe</strong> — Cada classe ganha nível de reputação pelo uso. Tiers desbloqueiam bônus permanentes exclusivos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>New Game+ Reescrito (v3)</strong> — Sistema de NG+ com multiplicadores escaláveis, novos desafios por ciclo e melhor preservação de progresso.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Auras</strong> — Auras ativas modificam o estilo de combate do herói (shadow, thunder, void, etc).</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Mutações de Prestígio</strong> — Cada prestige concede uma mutação aleatória com efeitos únicos e às vezes imprevisíveis.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Modo Speed Run</strong> — Cronometre boss kills. Recordes salvos por boss com recompensas de ouro e honra.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>O Oráculo</strong> — NPC especial que revela dicas sobre mecânicas escondidas e prevê eventos futuros.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Crafting de Itens Lendários</strong> — Combine materiais raros para forjar equipamentos únicos não disponíveis em lojas.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Classes Secretas</strong> — Desbloqueadas por condições ocultas. Não aparecem no menu de seleção normal.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ v21 ═══════════════════════════ -->
+  <div class="version-block" data-version="v21">
+    <div class="version-header">
+      <span class="version-num">v21.0</span>
+      <span class="version-name">O Mundo Vivo</span>
+      <span class="version-date">Fev 2026</span>
+    </div>
+    <p class="version-desc">Profundidade estratégica e narrativa. O jogo começa a se sentir como um mundo real.</p>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Skill Chains / Combos Condicionais</strong> — Sequências de 3–4 habilidades ativam ataques especiais combinados com nomes únicos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Formações de Combate</strong> — Escolha a formação antes da batalha para ajustar ATK, DEF, velocidade e estilo de luta.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Masmorras Procedurais</strong> — Dungeons geradas aleatoriamente com salas de combate, eventos, relíquias e boss final variáveis.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Karma</strong> — Decisões narrativas acumulam karma. Karma alto/baixo desbloqueia diálogos, eventos e itens exclusivos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>AI Partner</strong> — Companheiro de batalha com comportamento adaptativo que aprende o estilo de luta do jogador.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Codex do Universo</strong> — Enciclopédia in-game com lore expandido sobre regiões, facções e a história de Algoritma.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Especialização de Classes</strong> — Cada classe pode se especializar em um de dois caminhos ao atingir nível 50.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Legado (Heirloom)</strong> — Itens legados transferidos entre personagens após morte/reinício com bônus acumulados.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Torneio Semanal</strong> — Competição PvE com ranking global, recompensas de honra e títulos temporários.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Skin de Interface por Tema</strong> — HUD assume cores e estilo visual da região atual do mapa.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ v20 ═══════════════════════════ -->
+  <div class="version-block" data-version="v20">
+    <div class="version-header">
+      <span class="version-num">v20.0</span>
+      <span class="version-name">O Mapa e os Habitantes</span>
+      <span class="version-date">Jan 2026</span>
+    </div>
+    <p class="version-desc">Algoritma ganhou geografía e habitantes. O jogo deixou de ser linear.</p>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Mapa Interativo de Algoritma</strong> — Canvas SVG com regiões hexagonais desbloqueáveis, névoa de guerra e clima por região.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Escolhas Narrativas</strong> — Diálogos com múltiplas opções que afetam o mundo, NPCs e eventos futuros.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>NPCs com Missões</strong> — Personagens no mundo oferecem quests com recompensas, backstory e consequências narrativas.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Boss com Partes (Targeting System)</strong> — Bosses com partes destrutíveis: cabeça, braços, pernas. Cada parte tem HP e drops únicos.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ v19 ═══════════════════════════ -->
+  <div class="version-block" data-version="v19">
+    <div class="version-header">
+      <span class="version-num">v19.0</span>
+      <span class="version-name">A Economia do Caos</span>
+      <span class="version-date">Dez 2025</span>
+    </div>
+    <p class="version-desc">Profundidade de itens e sistemas econômicos. O herói agora tem agência real sobre seu poder.</p>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Árvore de Talentos</strong> — 3 árvores (Ofensiva, Defensiva, Suporte) com 5 tiers cada. Pontos ganhos por level-up.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Forja & Upgrade de Itens</strong> — Aprimorar armas e armaduras com materiais. Cada +1 aumenta stats e muda o visual do item.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Mercador Errante</strong> — NPC que aparece aleatoriamente com itens raros rotacionados. Ofertas por tempo limitado.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Eventos de Batalha Aleatórios</strong> — Durante combates normais, eventos inesperados como invasão de boss menor, chuva de ouro ou maldição temporária.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Batalhas Matemáticas</strong> — Mini-jogo de cálculo durante combate. Resposta correta: bônus de dano. Incorreta: penalidade.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Relíquias Amaldiçoadas</strong> — Itens de alto risco/recompensa com efeitos negativos colaterais. Para jogadores que amam gamble.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Gemas</strong> — Encaixe gemas em armas/armaduras para bônus específicos de elemento, crit, dodge, HP e mais.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Honra</strong> — Moeda alternativa ganha em torneios e desafios. Loja exclusiva com itens únicos.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ v18 ═══════════════════════════ -->
+  <div class="version-block" data-version="v18">
+    <div class="version-header">
+      <span class="version-num">v18.0</span>
+      <span class="version-name">As Runas do Abismo</span>
+      <span class="version-date">Nov 2025</span>
+    </div>
+    <p class="version-desc">Camadas de poder e desafio. O first major expansion do CalcQuest.</p>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Runas</strong> — Runas equipáveis que modificam drasticamente o estilo de combate: glass cannon, titan, momentum, etc.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Conquistas com Buffs Passivos</strong> — Conquistas desbloqueiam melhorias permanentes. Mais de 60 conquistas disponíveis.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Modo Onda (Wave Survival)</strong> — Sobreviva a ondas infinitas de inimigos com dificuldade crescente.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Dungeon Diária</strong> — Dungeon com 5 andares que reseta todo dia. Recompensa de ouro e poções ao completar.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Grimório de Skills Passivas</strong> — Biblioteca de habilidades passivas que podem ser equipadas para modificar combate.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Títulos</strong> — Títulos concedidos por feitos específicos. Afetam diálogos de NPCs e HUD.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Modo Desafio</strong> — Runs com restrições autoimposta (fragile, hardcore, no-heal, etc) por recompensas maiores.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ v17 ═══════════════════════════ -->
+  <div class="version-block" data-version="v17">
+    <div class="version-header">
+      <span class="version-num">v17.0</span>
+      <span class="version-name">Os Elementos Despertam</span>
+      <span class="version-date">Out 2025</span>
+    </div>
+    <p class="version-desc">Combate ganhou dimensão elemental e os bosses passaram a ter personalidade própria.</p>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Sistema de Elementos</strong> — Fogo, gelo, raio, veneno. Inimigos e habilidades têm afinidades e fraquezas elementais.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Status Effects</strong> — Burn, freeze, stun, poison com duração e efeitos visuais. Aplicáveis por skills e itens.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Break System (Shield Points)</strong> — Inimigos com escudo exigem dano de break para expor sua fraqueza antes de causar dano real.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>5ª Skill por Classe</strong> — Habilidade suprema exclusiva desbloqueada no nível 40+. Cooldown longo, poder devastador.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Diálogos de Boss</strong> — Bosses falam antes, durante e após o combate com linhas únicas por situação.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Battle Log</strong> — Registro em tempo real das ações de combate visível na tela.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Fragmentos de Lore</strong> — Textos narrativos desbloqueados por boss kills, dungeons e condições especiais.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Novo</span><span class="entry-text"><strong>Classe: O Protocolo</strong> — Nova classe secreta com habilidades baseadas em lógica e código.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MÓDULOS EXTERNOS ═══════════════ -->
+  <div class="version-block" data-version="modules">
+    <div class="version-header">
+      <span class="version-num">Módulos</span>
+      <span class="version-name">Expansões Externas</span>
+    </div>
+    <p class="version-desc">Funcionalidades implementadas como módulos independentes carregados após o core do jogo.</p>
+
+    <div class="section-label">Visual & Interface</div>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>damage-numbers.js</strong> — Números de dano com tamanho proporcional ao impacto. Cores por tipo: verde=heal, dourado=crit, azul=magia.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>combat-hud.js</strong> — HUD de combate expandido com barras animadas, ícones de status e indicadores de turno.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>combat-elements.js</strong> — Animações e efeitos visuais para cada elemento e tipo de dano.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>achievement-notifications.js</strong> — Popup animado no canto da tela ao desbloquear conquistas, com ícone e recompensa.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>boot-screen.js</strong> — Tela de carregamento temática com logo animado e dicas de jogo aleatórias.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>day-night-effects.js</strong> — Ciclo dia/noite com transições visuais baseadas no relógio real do sistema.</span></div>
+    </div>
+
+    <div class="section-label">Gameplay</div>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>alchemy-system.js</strong> — Sistema completo de alquimia: ingredientes por região, 8 receitas base + 3 secretas.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>class-synergy.js</strong> — Sinergias de classes em NG+: ao completar a campanha, combinar classes anteriores libera poderes únicos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>monster-evolution.js</strong> — Monstros evoluem em formas mais perigosas conforme o herói os mata repetidamente.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>boss-parts-destructible.js</strong> — Lógica completa de dano por parte de boss, com breaks, drops únicos e estados visuais.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>quest-tracker.js</strong> — Tracker de missões flutuante com progresso em tempo real e notificações de conclusão.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>weather-system.js</strong> — 6 climas com efeitos reais em combate e drops. Integrado com ciclo dia/noite.</span></div>
+    </div>
+
+    <div class="section-label">Narrativa & Lore</div>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>codex-lore.js</strong> — Codex com 50+ fragmentos de lore sobre o universo de Algoritma. Desbloqueados por conquistas.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>hero-diary.js</strong> — Diário do Herói com entradas narrativas geradas via IA (Anthropic API) após boss kills e ciclos de NG+.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>living-village.js</strong> — Aldeia Viva: NPCs comentam o progresso do herói e o cenário muda visualmente conforme o nível.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>post-game-region.js</strong> — O Vazio: nova região pós-game com monstros únicos, desbloqueada após o primeiro ciclo de NG+.</span></div>
+    </div>
+
+    <div class="section-label">UI & Qualidade de Vida</div>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>world-map.js</strong> — Mapa do mundo com canvas SVG hexagonal, névoa de guerra e sistema de clima por região.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>inventory-ui.js</strong> — Interface de inventário remodelada com filtros, comparação de itens e arrastar-e-soltar.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>unified-dock.js</strong> — Dock unificada com acesso rápido a todos os sistemas do jogo em uma única barra.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>quick-menu.js</strong> — Menu rápido via swipe/botão com ações mais usadas sem abrir modais completos.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>session-stats.js</strong> — Dashboard flutuante: kills, ouro, XP, dano total e tempo de sessão em tempo real.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>mobile-optimizer.js</strong> — Topbar mobile com localização e relógio, badge de talentos e otimizações de toque.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>ui-live-sync.js</strong> — Observador de estado que força a UI a sincronizar em tempo real via MutationObserver + polling.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>ui-improvements.js</strong> — Melhorias gerais de UX: tooltips, animações de transição e responsividade aprimorada.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Módulo</span><span class="entry-text"><strong>profile-button.js</strong> — Botão de perfil com avatar, nível e resumo de stats acessível de qualquer tela.</span></div>
+    </div>
+
+    <div class="section-label">Correções de Núcleo</div>
+    <div class="entries">
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>combat-fix.js / combat-master-fix.js</strong> — Corrige edge cases de combate: parry no mesmo frame do ataque inimigo, dano negativo, states órfãos.</span></div>
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>dungeon-fix.js</strong> — Correções de progressão em dungeons procedurais: spawn de sala final, reset de estado entre andares.</span></div>
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>buttons-fix.js</strong> — Corrige botões que paravam de responder após certas sequências de ações ou reabertura de modais.</span></div>
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>save-system.js</strong> — Sistema de save revisado com versionamento, migração automática de saves antigos e fallback seguro.</span></div>
+      <div class="entry" data-type="fix"><span class="tag tag-fix">Fix</span><span class="entry-text"><strong>ng-plus-v3.js</strong> — NG+ reescrito do zero: não recria modais, preserva flags corretamente, multiplicadores balanceados.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ v1 ═══════════════════════════ -->
+  <div class="version-block" data-version="legacy">
+    <div class="version-header">
+      <span class="version-num">v1.0</span>
+      <span class="version-name">A Origem</span>
+      <span class="version-date">2024</span>
+    </div>
+    <p class="version-desc">A pergunta que deu origem a tudo: <em>"E se uma calculadora pudesse evoluir em um RPG?"</em></p>
+    <div class="entries">
+      <div class="entry" data-type="new"><span class="tag tag-new">Base</span><span class="entry-text"><strong>Motor de jogo em Vanilla JS</strong> — Game loop com requestAnimationFrame, sem frameworks ou bundlers.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Base</span><span class="entry-text"><strong>Combate ATB</strong> — Active Time Battle com barra de tempo inimiga e sistema de parry por timing.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Base</span><span class="entry-text"><strong>Sistema de RPG base</strong> — Classes, equipamentos, XP, level-up, gold, potions e progressão de personagem.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Base</span><span class="entry-text"><strong>Narrativa em atos</strong> — História dividida em atos no estilo Visual Novel culminando no Rei Demônio de Algoritma.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Base</span><span class="entry-text"><strong>Bestiário</strong> — Registro automático de todos os inimigos derrotados com estatísticas de combate.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Base</span><span class="entry-text"><strong>Prestige / Sistema de Missões Diárias / Co-op / PvP assíncrono</strong> — Camadas de conteúdo recorrente desde o início.</span></div>
+      <div class="entry" data-type="new"><span class="tag tag-new">Base</span><span class="entry-text"><strong>Battle Pass com 10 tiers</strong> — Sistema de passe sazonal com 100 níveis de recompensas progressivas.</span></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>CalcQuest: Lendas de Algoritma · <a href="https://calcquest-rpg.netlify.app/" target="_blank">calcquest-rpg.netlify.app</a></p>
+    <p style="margin-top:8px">Projeto open-source para estudo e experimentação em Game Dev + Web Development.</p>
+  </footer>
+
+</div>
+
+<script>
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const entries    = document.querySelectorAll('.entry');
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const f = btn.dataset.filter;
+      entries.forEach(e => {
+        if (f === 'all' || e.dataset.type === f) {
+          e.style.display = 'flex';
+        } else {
+          e.style.display = 'none';
+        }
+      });
+
+      // hide empty version blocks
+      document.querySelectorAll('.version-block').forEach(block => {
+        if (f === 'all') { block.classList.remove('hidden'); return; }
+        const visible = [...block.querySelectorAll('.entry')].some(e => e.style.display !== 'none');
+        block.classList.toggle('hidden', !visible);
+      });
+    });
+  });
+
+  // staggered entrance animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        entry.target.style.animationDelay = `${i * 0.04}s`;
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.version-block').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+
+  // force first block visible immediately
+  setTimeout(() => {
+    document.querySelectorAll('.version-block').forEach(el => {
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    });
+  }, 100);
+</script>
+</body>
+</html>

@@ -4136,7 +4136,8 @@ rpg.dealDamageToMonster = function (baseDmg, atkType, isUltimate = false) {
   }
 
   let isCrit = Math.random() < this.getCritChance() || isUltimate;
-  let finalDmg = isCrit ? baseDmg * 2 : baseDmg;
+  // T4: HolyArmor - bloqueia críticos se o ataque INIMIGO for crítico (aplicado no hook executeMonsterAttack)
+  let finalDmg = isCrit ? baseDmg * (this.talentCritMult||2) : baseDmg;
 
   let typeMod = 1;
   let popMsg = null;
@@ -6524,6 +6525,13 @@ rpg.TALENT_TREES = {
       { id:"t_o8",  name:{pt:"Voragem",           en:"Voracity"       }, desc:{pt:"Abates curam 5% HP",      en:"Kills heal 5% HP"       }, cost:2, req:"t_o5", apply:s=>{s.talentKillHeal=true;} },
       { id:"t_o9",  name:{pt:"Supremacia",        en:"Supremacy"      }, desc:{pt:"Supremo causa +100% dano",en:"Ultimate +100% damage"  }, cost:3, req:"t_o6", apply:s=>{s.talentUltimateMult=(s.talentUltimateMult||1)+1.0;} },
       { id:"t_o10", name:{pt:"Extinção",          en:"Extinction"     }, desc:{pt:"+50% ATK permanente",     en:"+50% perm. ATK"         }, cost:4, req:"t_o9", apply:s=>{s.permAtkBonus=(s.permAtkBonus||0)+0.50;} },
+      // ── Tier 4 ──
+      { id:"t_o11", name:{pt:"Golpe Vampírico",   en:"Vamp Strike"    }, desc:{pt:"Ataques roubam 4% HP",    en:"Attacks steal 4% HP"    }, cost:5, req:"t_o10", apply:s=>{s.talentVampStrike=true;} },
+      { id:"t_o12", name:{pt:"Frenesi",           en:"Frenzy"         }, desc:{pt:"Combo 5+ dá +30% ATK",    en:"5+ combo gives +30% ATK"}, cost:5, req:"t_o10", apply:s=>{s.talentFrenzy=true;} },
+      { id:"t_o13", name:{pt:"Crit em Cascata",   en:"Cascade Crit"   }, desc:{pt:"Críticos encadeiam 30%",  en:"Crits chain 30% chance" }, cost:6, req:"t_o11", apply:s=>{s.talentCascadeCrit=true;} },
+      // ── Tier 5 ──
+      { id:"t_o14", name:{pt:"Stacks de Boss",    en:"Boss Stacks"    }, desc:{pt:"+15% ATK por boss morto (máx 10)",en:"+15% ATK per boss kill (max 10)"}, cost:7, req:"t_o12", apply:s=>{s.talentBossStacks=true;} },
+      { id:"t_o15", name:{pt:"Modo Deus",         en:"God Mode"       }, desc:{pt:"ATK 5x por 1 turno após supremo",en:"ATK 5x for 1 turn after ultimate"}, cost:8, req:"t_o13", apply:s=>{s.talentGodMode=true;} },
     ]
   },
   defense: {
@@ -6542,6 +6550,13 @@ rpg.TALENT_TREES = {
       { id:"t_d8",  name:{pt:"Escudo Espiritual", en:"Spirit Shield"  }, desc:{pt:"20% ignorar dano letal",  en:"20% ignore lethal hit"  }, cost:3, req:"t_d5", apply:s=>{s.talentSpiritShield=true;} },
       { id:"t_d9",  name:{pt:"Bastião",           en:"Bastion"        }, desc:{pt:"+35% HP máximo",          en:"+35% max HP"            }, cost:3, req:"t_d7", apply:s=>{s.permAllBonus=(s.permAllBonus||0)+0.175;} },
       { id:"t_d10", name:{pt:"Invulnerabilidade", en:"Invulnerability"}, desc:{pt:"1x por batalha imunidade 1 hit",en:"1x/battle immune to 1 hit"}, cost:4, req:"t_d8", apply:s=>{s.talentInvulnerability=true;} },
+      // ── Tier 4 ──
+      { id:"t_d11", name:{pt:"Espinhos",          en:"Thorns"         }, desc:{pt:"Reflete 20% dano recebido", en:"Reflect 20% damage taken"}, cost:5, req:"t_d10", apply:s=>{s.talentThorns=true;} },
+      { id:"t_d12", name:{pt:"Regen T4",          en:"Tier4 Regen"    }, desc:{pt:"Regen extra 5% HP/turno",   en:"Extra 5% HP regen/turn"  }, cost:5, req:"t_d10", apply:s=>{s.talentRegenT4=true;} },
+      { id:"t_d13", name:{pt:"Armadura Sagrada",  en:"Holy Armor"     }, desc:{pt:"Imune a ataques críticos",  en:"Immune to critical hits" }, cost:6, req:"t_d11", apply:s=>{s.talentHolyArmor=true;} },
+      // ── Tier 5 ──
+      { id:"t_d14", name:{pt:"Imortal",           en:"Immortal"       }, desc:{pt:"2x imunidade a 1 hit/batalha",en:"2x immunity per battle"}, cost:7, req:"t_d12", apply:s=>{s.talentImmortal=true; s._immortalCharges=2;} },
+      { id:"t_d15", name:{pt:"Colosso",           en:"Colossus"       }, desc:{pt:"Regen 10% HP por turno",    en:"Regen 10% HP per turn"   }, cost:8, req:"t_d13", apply:s=>{s.talentColossus=true;} },
     ]
   },
   support: {
@@ -6560,6 +6575,13 @@ rpg.TALENT_TREES = {
       { id:"t_s8",  name:{pt:"Poção Milagrosa",   en:"Miracle Potion" }, desc:{pt:"10% de poção grátis",     en:"10% free potion drop"   }, cost:3, req:"t_s5", apply:s=>{s.talentFreePot=true;} },
       { id:"t_s9",  name:{pt:"Riqueza Infinita",  en:"Infinite Wealth"}, desc:{pt:"+100% Ouro e XP",         en:"+100% Gold and XP"      }, cost:3, req:"t_s7", apply:s=>{s.permGoldBonus=(s.permGoldBonus||0)+1.0; s.permXpBonus=(s.permXpBonus||0)+1.0;} },
       { id:"t_s10", name:{pt:"Transcendência",    en:"Transcendence"  }, desc:{pt:"+30% todos stats",        en:"+30% all stats"         }, cost:4, req:"t_s9", apply:s=>{s.permAllBonus=(s.permAllBonus||0)+0.30;} },
+      // ── Tier 4 ──
+      { id:"t_s11", name:{pt:"Mente Ágil",        en:"Agile Mind"     }, desc:{pt:"-40% todos cooldowns",     en:"-40% all cooldowns"      }, cost:5, req:"t_s10", apply:s=>{s.talentCdReduce=(s.talentCdReduce||0)+0.40;} },
+      { id:"t_s12", name:{pt:"Alquimista",        en:"Alchemist"      }, desc:{pt:"Poções curam 100% HP",     en:"Potions heal 100% HP"    }, cost:5, req:"t_s10", apply:s=>{s.talentPotionHeal=1.0;} },
+      { id:"t_s13", name:{pt:"XP Ascensão",       en:"XP Ascension"   }, desc:{pt:"+100% XP ganho",           en:"+100% XP gained"         }, cost:6, req:"t_s11", apply:s=>{s.permXpBonus=(s.permXpBonus||0)+1.0;} },
+      // ── Tier 5 ──
+      { id:"t_s14", name:{pt:"Mercador Lendário", en:"Legend Merchant"}, desc:{pt:"+200% Ouro ganho",         en:"+200% Gold earned"       }, cost:7, req:"t_s12", apply:s=>{s.permGoldBonus=(s.permGoldBonus||0)+2.0;} },
+      { id:"t_s15", name:{pt:"Ascensão",          en:"Ascension"      }, desc:{pt:"XP duplo permanente",      en:"Permanent double XP"     }, cost:8, req:"t_s13", apply:s=>{s.permXpBonus=(s.permXpBonus||0)+1.0;} },
     ]
   }
 };
@@ -6581,6 +6603,20 @@ rpg.talentHealBoost    = 1;
 rpg.talentPotionHeal   = 0.40;
 rpg.talentCdReduce     = 0;
 rpg.talentFreePot      = false;
+// Tier 4/5 flags
+rpg.talentVampStrike   = false;
+rpg.talentFrenzy       = false;
+rpg.talentCascadeCrit  = false;
+rpg.talentBossStacks   = false;
+rpg.talentGodMode      = false;
+rpg._godModeActive     = false;
+rpg.bossKills          = 0;
+rpg.talentThorns       = false;
+rpg.talentRegenT4      = false;
+rpg.talentHolyArmor    = false;
+rpg.talentImmortal     = false;
+rpg._immortalCharges   = 0;
+rpg.talentColossus     = false;
 
 rpg._applyTalents = function() {
   this.talentDoubleStrike = false; this.talentFuryBoost = 0;
@@ -6591,11 +6627,33 @@ rpg._applyTalents = function() {
   this.talentSpiritShield = false; this.talentInvulnerability = false;
   this.talentHealBoost = 1; this.talentPotionHeal = 0.40;
   this.talentCdReduce = 0; this.talentFreePot = false;
+  // Tier 4/5 reset
+  this.talentVampStrike = false; this.talentFrenzy = false;
+  this.talentCascadeCrit = false; this.talentBossStacks = false;
+  this.talentGodMode = false; this._godModeActive = false;
+  this.talentThorns = false; this.talentRegenT4 = false;
+  this.talentHolyArmor = false; this.talentImmortal = false;
+  this._immortalCharges = 0; this.talentColossus = false;
   Object.values(this.TALENT_TREES).forEach(tree => {
     tree.nodes.forEach(node => {
       if (this.unlockedTalents.includes(node.id)) node.apply(this);
     });
   });
+};
+
+rpg.resetTalents = function() {
+  const total = this.unlockedTalents.reduce((sum, id) => {
+    const node = Object.values(this.TALENT_TREES).flatMap(t=>t.nodes).find(n=>n.id===id);
+    return sum + (node ? node.cost : 0);
+  }, 0);
+  this.unlockedTalents = [];
+  this.talentPoints += total;
+  this._applyTalents();
+  localStorage.setItem("rpg_talent_pts", this.talentPoints);
+  localStorage.setItem("rpg_talents", "[]");
+  this.save();
+  showToast("🔄 Talentos resetados! " + total + " pontos devolvidos.", 3000);
+  this.renderTalentTree();
 };
 
 rpg.unlockTalent = function(id) {
@@ -6610,7 +6668,9 @@ rpg.unlockTalent = function(id) {
   localStorage.setItem("rpg_talents", JSON.stringify(this.unlockedTalents));
   this.save();
   showToast("✨ Talento aprendido: " + node.name[this.lang] + "!", 3000);
-  this.renderTalentTree();
+  // FIX: setTimeout garante que renderTalentTree roda APÓS o patch do ui-live-sync
+  const self = this;
+  setTimeout(function() { self.renderTalentTree(); }, 0);
   this.updateUI();
 };
 
@@ -6619,7 +6679,11 @@ rpg.renderTalentTree = function() {
   if (!el) return;
   el.innerHTML = `<div class="flex justify-between items-center mb-4 bg-zinc-950/80 border border-zinc-800 rounded-xl p-3">
     <div><p class="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Pontos Disponíveis</p><p class="text-2xl font-black text-yellow-400">${this.talentPoints} ✨</p></div>
-    <div class="text-right"><p class="text-[9px] text-zinc-600">+1 ponto por lvl 10</p><p class="text-[9px] text-zinc-600">Total: ${this.unlockedTalents.length} / 30</p></div>
+    <div class="text-right">
+      <p class="text-[9px] text-zinc-600">+1 ponto por lvl 10</p>
+      <p class="text-[9px] text-zinc-600">Total: ${this.unlockedTalents.length} / 45</p>
+      <button onclick="if(confirm('Resetar todos os talentos?')) rpg.resetTalents()" class="mt-1 text-[8px] text-zinc-500 hover:text-red-400 transition underline">🔄 Resetar Talentos</button>
+    </div>
   </div>` +
   Object.entries(this.TALENT_TREES).map(([key, tree]) => {
     const doneCount = tree.nodes.filter(n => this.unlockedTalents.includes(n.id)).length;
@@ -6627,7 +6691,7 @@ rpg.renderTalentTree = function() {
       <div class="flex items-center gap-2 mb-2">
         <p class="text-xs font-black ${tree.color} uppercase tracking-widest">${tree.name[this.lang]}</p>
         <div class="flex-1 h-px bg-zinc-800"></div>
-        <p class="text-[9px] text-zinc-600">${doneCount}/10</p>
+        <p class="text-[9px] text-zinc-600">${doneCount}/15</p>
       </div>
       <div class="grid grid-cols-2 gap-1.5">` +
       tree.nodes.map(node => {
@@ -6643,7 +6707,8 @@ rpg.renderTalentTree = function() {
         </div>`;
       }).join("") + `</div></div>`;
   }).join("");
-  lucide.createIcons();
+  // FIX: limitar re-scan ao container, não ao DOM inteiro (~20x mais rápido)
+  try { lucide.createIcons({ nodes: [el] }); } catch(e) { lucide.createIcons(); }
 };
 
 // Talent: ganhar pontos ao subir de nível
@@ -11440,8 +11505,237 @@ if (_secretMathSubmit) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ── v22.0 — SAVE / INIT PATCHES ───────────────────────────────
+// ── v23.0 — SISTEMA DE SUBCLASSES / MASTERCLASSES / GOD CLASSES
 // ═══════════════════════════════════════════════════════════════
+
+rpg.SUBCLASS_DEFS = {
+  // ── Guerreiro
+  warrior: [
+    { id:"sc_berserker",   name:{pt:"Berserker",       en:"Berserker"      }, icon:"swords",    color:"text-red-400",
+      desc:{pt:"+40% ATK, +25% Crit quando HP<50%", en:"+40% ATK, +25% Crit when HP<50%"},
+      req:{level:30, bosses:2, base:"warrior"}, multHp:1.0, multAtk:1.4, addCrit:0.10, addDodge:0.0 },
+    { id:"sc_guardian",    name:{pt:"Guardião",         en:"Guardian"       }, icon:"shield",    color:"text-blue-400",
+      desc:{pt:"+60% HP, +20% Defesa", en:"+60% HP, +20% Defense"},
+      req:{level:30, bosses:2, base:"warrior"}, multHp:1.6, multAtk:0.9, addCrit:0.0, addDodge:0.10 },
+    { id:"sc_warlord",     name:{pt:"Senhor da Guerra", en:"Warlord"        }, icon:"trophy",    color:"text-orange-400",
+      desc:{pt:"+30% ATK/HP, +15% Crit", en:"+30% ATK/HP, +15% Crit"},
+      req:{level:30, bosses:2, base:"warrior"}, multHp:1.3, multAtk:1.3, addCrit:0.15, addDodge:0.05 },
+  ],
+  // ── Mago
+  mage: [
+    { id:"sc_archmage",    name:{pt:"Arquimago",        en:"Archmage"       }, icon:"sparkles",  color:"text-purple-400",
+      desc:{pt:"+80% ATK mágico, +20% Crit", en:"+80% magic ATK, +20% Crit"},
+      req:{level:30, bosses:2, base:"mage"}, multHp:0.7, multAtk:1.8, addCrit:0.20, addDodge:0.0 },
+    { id:"sc_elementalist",name:{pt:"Elementalista",    en:"Elementalist"   }, icon:"flame",     color:"text-cyan-400",
+      desc:{pt:"+60% ATK, +30% Esq, imune a elementos", en:"+60% ATK, +30% Dodge, element immune"},
+      req:{level:30, bosses:2, base:"mage"}, multHp:0.8, multAtk:1.6, addCrit:0.10, addDodge:0.30 },
+    { id:"sc_shadowmage",  name:{pt:"Bruxo das Sombras",en:"Shadow Mage"    }, icon:"moon",      color:"text-violet-400",
+      desc:{pt:"+50% ATK, +30% Crit, -10% HP", en:"+50% ATK, +30% Crit, -10% HP"},
+      req:{level:30, bosses:2, base:"mage"}, multHp:0.6, multAtk:1.5, addCrit:0.30, addDodge:0.05 },
+  ],
+  // ── Assassino
+  rogue: [
+    { id:"sc_assassin",   name:{pt:"Assassino",        en:"Assassin"       }, icon:"scissors",  color:"text-red-300",
+      desc:{pt:"+50% Crit, +25% Esq", en:"+50% Crit, +25% Dodge"},
+      req:{level:30, bosses:2, base:"rogue"}, multHp:0.85, multAtk:1.2, addCrit:0.50, addDodge:0.25 },
+    { id:"sc_shadowdancer",name:{pt:"Dançarino das Sombras",en:"Shadow Dancer"}, icon:"wind",   color:"text-indigo-300",
+      desc:{pt:"+40% Esq/Crit, Sombras curam 3% HP/turno", en:"+40% Dodge/Crit, Shadows heal 3%/turn"},
+      req:{level:30, bosses:2, base:"rogue"}, multHp:0.9, multAtk:1.1, addCrit:0.40, addDodge:0.40 },
+    { id:"sc_illusionist", name:{pt:"Ilusionista",      en:"Illusionist"    }, icon:"eye",       color:"text-pink-300",
+      desc:{pt:"+60% Esq, 20% esquivas contra-atacam", en:"+60% Dodge, 20% dodges counter"},
+      req:{level:30, bosses:2, base:"rogue"}, multHp:0.8, multAtk:1.0, addCrit:0.20, addDodge:0.60 },
+  ],
+  // ── Cavaleiro
+  paladin: [
+    { id:"sc_crusader",   name:{pt:"Cruzado",          en:"Crusader"       }, icon:"cross",     color:"text-yellow-300",
+      desc:{pt:"+50% HP, +30% ATK, dano sagrado", en:"+50% HP, +30% ATK, holy damage"},
+      req:{level:30, bosses:2, base:"paladin"}, multHp:1.5, multAtk:1.3, addCrit:0.10, addDodge:0.10 },
+    { id:"sc_inquisitor", name:{pt:"Inquisidor",       en:"Inquisitor"     }, icon:"flame",     color:"text-amber-400",
+      desc:{pt:"+40% ATK, Ataques queimam inimigos", en:"+40% ATK, Attacks burn enemies"},
+      req:{level:30, bosses:2, base:"paladin"}, multHp:1.2, multAtk:1.4, addCrit:0.15, addDodge:0.05 },
+    { id:"sc_deathknight",name:{pt:"Cavaleiro da Morte",en:"Death Knight"  }, icon:"skull",     color:"text-green-300",
+      desc:{pt:"+30% HP/ATK, Veneno passivo em batalha", en:"+30% HP/ATK, Passive poison in battle"},
+      req:{level:30, bosses:2, base:"paladin"}, multHp:1.3, multAtk:1.3, addCrit:0.10, addDodge:0.10 },
+  ],
+};
+
+rpg.MASTERCLASS_DEFS = [
+  { id:"mc_warchief",    name:{pt:"Chefe de Guerra",   en:"War Chief"      }, icon:"swords",    color:"text-red-500",
+    desc:{pt:"+100% ATK/HP, Fúria dobrada", en:"+100% ATK/HP, double Fury"},
+    req:{level:80, bosses:6, subclass:true}, multHp:2.0, multAtk:2.0, addCrit:0.25, addDodge:0.10 },
+  { id:"mc_titan",       name:{pt:"Muro de Titã",      en:"Titan Wall"     }, icon:"shield",    color:"text-blue-500",
+    desc:{pt:"+200% HP, -50% dano recebido", en:"+200% HP, -50% damage taken"},
+    req:{level:80, bosses:6, subclass:true}, multHp:3.0, multAtk:1.2, addCrit:0.10, addDodge:0.20 },
+  { id:"mc_spellweaver", name:{pt:"Feiticeiro Supremo", en:"Supreme Mage"  }, icon:"sparkles",  color:"text-purple-500",
+    desc:{pt:"+200% ATK mágico, Críticos duplos", en:"+200% magic ATK, double crits"},
+    req:{level:80, bosses:6, subclass:true}, multHp:0.8, multAtk:3.0, addCrit:0.40, addDodge:0.10 },
+  { id:"mc_voidweaver",  name:{pt:"Tecelão do Vazio",  en:"Void Weaver"    }, icon:"moon",      color:"text-violet-500",
+    desc:{pt:"+150% ATK, +50% Esq, ataques drenam vida", en:"+150% ATK, +50% Dodge, attacks drain HP"},
+    req:{level:80, bosses:6, subclass:true}, multHp:1.2, multAtk:2.5, addCrit:0.30, addDodge:0.50 },
+  { id:"mc_phantom",     name:{pt:"Fantasma",          en:"Phantom"        }, icon:"ghost",     color:"text-zinc-400",
+    desc:{pt:"+80% Esq, ataques impossíveis de esquivar", en:"+80% Dodge, unblockable attacks"},
+    req:{level:80, bosses:6, subclass:true}, multHp:1.0, multAtk:1.8, addCrit:0.50, addDodge:0.80 },
+  { id:"mc_bladedancer", name:{pt:"Dançarino da Lâmina",en:"Blade Dancer"  }, icon:"wind",      color:"text-pink-500",
+    desc:{pt:"+80% ATK/Crit, Ataques em cascata", en:"+80% ATK/Crit, Cascade attacks"},
+    req:{level:80, bosses:6, subclass:true}, multHp:1.0, multAtk:1.8, addCrit:0.80, addDodge:0.30 },
+  { id:"mc_champion",    name:{pt:"Campeão Divino",    en:"Divine Champion"}, icon:"trophy",     color:"text-yellow-500",
+    desc:{pt:"+150% todos stats", en:"+150% all stats"},
+    req:{level:80, bosses:6, subclass:true}, multHp:2.5, multAtk:2.5, addCrit:0.30, addDodge:0.30 },
+  { id:"mc_lichking",    name:{pt:"Rei Lich",          en:"Lich King"      }, icon:"skull",      color:"text-emerald-400",
+    desc:{pt:"+300% ATK, Imune a morte 1x por batalha", en:"+300% ATK, immune to death 1x/battle"},
+    req:{level:80, bosses:6, subclass:true}, multHp:1.5, multAtk:4.0, addCrit:0.40, addDodge:0.20 },
+];
+
+rpg.GODCLASS_DEFS = [
+  { id:"gc_wargod",    name:{pt:"Avatar da Guerra",  en:"Avatar of War"   }, icon:"swords",  color:"text-red-400",
+    desc:{pt:"+500% ATK, Modo Deus ativo em batalha", en:"+500% ATK, God Mode active in battle"},
+    req:{level:150, bosses:10, masterclass:true}, multHp:5.0, multAtk:6.0, addCrit:0.60, addDodge:0.30 },
+  { id:"gc_arcane",   name:{pt:"Deus Arcano",       en:"Arcane God"      }, icon:"sparkles",color:"text-purple-400",
+    desc:{pt:"+500% ATK mágico, Crits causam 10x", en:"+500% magic ATK, Crits deal 10x"},
+    req:{level:150, bosses:10, masterclass:true}, multHp:3.0, multAtk:6.0, addCrit:0.95, addDodge:0.20 },
+  { id:"gc_death",    name:{pt:"Fantasma da Morte", en:"Death Phantom"   }, icon:"ghost",   color:"text-zinc-300",
+    desc:{pt:"+400% Esq/Crit, Ataques drenam 20% HP", en:"+400% Dodge/Crit, attacks drain 20% HP"},
+    req:{level:150, bosses:10, masterclass:true}, multHp:2.0, multAtk:4.0, addCrit:0.95, addDodge:0.95 },
+  { id:"gc_sovereign",name:{pt:"Soberano Divino",   en:"Divine Sovereign"}, icon:"crown",   color:"text-yellow-300",
+    desc:{pt:"+1000% todos stats", en:"+1000% all stats"},
+    req:{level:150, bosses:10, masterclass:true}, multHp:11.0, multAtk:11.0, addCrit:0.99, addDodge:0.99 },
+];
+
+rpg.unlockedSubclasses   = JSON.parse(localStorage.getItem("rpg_subclasses")||"[]");
+rpg.unlockedMasterclasses= JSON.parse(localStorage.getItem("rpg_masterclasses")||"[]");
+rpg.unlockedGodclasses   = JSON.parse(localStorage.getItem("rpg_godclasses")||"[]");
+rpg.equippedSubclass     = localStorage.getItem("rpg_eq_subclass")||null;
+rpg.equippedMasterclass  = localStorage.getItem("rpg_eq_masterclass")||null;
+rpg.equippedGodclass     = localStorage.getItem("rpg_eq_godclass")||null;
+
+rpg.checkAdvancedClasses = function() {
+  const bossesDefeated = (this.defeatedBosses||[]).length;
+  const hasSubclass = !!this.equippedSubclass;
+  const hasMasterclass = !!this.equippedMasterclass;
+  // Check SubClasses
+  Object.values(this.SUBCLASS_DEFS).flat().forEach(sc => {
+    if (!this.unlockedSubclasses.includes(sc.id)) {
+      const req = sc.req;
+      if (this.level >= req.level && bossesDefeated >= req.bosses && this.eqClass === req.base) {
+        this.unlockedSubclasses.push(sc.id);
+        localStorage.setItem("rpg_subclasses", JSON.stringify(this.unlockedSubclasses));
+        showToast("⚔️ SubClasse Desbloqueada: " + sc.name[this.lang] + "!", 5000);
+      }
+    }
+  });
+  // Check MasterClasses
+  this.MASTERCLASS_DEFS.forEach(mc => {
+    if (!this.unlockedMasterclasses.includes(mc.id)) {
+      if (this.level >= mc.req.level && bossesDefeated >= mc.req.bosses && hasSubclass) {
+        this.unlockedMasterclasses.push(mc.id);
+        localStorage.setItem("rpg_masterclasses", JSON.stringify(this.unlockedMasterclasses));
+        showToast("🏆 MasterClass Desbloqueada: " + mc.name[this.lang] + "!", 5000);
+      }
+    }
+  });
+  // Check GodClasses
+  this.GODCLASS_DEFS.forEach(gc => {
+    if (!this.unlockedGodclasses.includes(gc.id)) {
+      if (this.level >= gc.req.level && bossesDefeated >= gc.req.bosses && hasMasterclass) {
+        this.unlockedGodclasses.push(gc.id);
+        localStorage.setItem("rpg_godclasses", JSON.stringify(this.unlockedGodclasses));
+        showToast("⚡ GOD CLASS Desbloqueada: " + gc.name[this.lang] + "!", 6000);
+      }
+    }
+  });
+};
+
+rpg.getAdvancedClassBonus = function() {
+  let bonus = { multHp: 1, multAtk: 1, addCrit: 0, addDodge: 0 };
+  const apply = (def) => {
+    bonus.multHp  *= def.multHp;
+    bonus.multAtk *= def.multAtk;
+    bonus.addCrit += def.addCrit;
+    bonus.addDodge+= def.addDodge;
+  };
+  if (this.equippedSubclass) {
+    const sc = Object.values(this.SUBCLASS_DEFS).flat().find(s=>s.id===this.equippedSubclass);
+    if (sc) apply(sc);
+  }
+  if (this.equippedMasterclass) {
+    const mc = this.MASTERCLASS_DEFS.find(m=>m.id===this.equippedMasterclass);
+    if (mc) apply(mc);
+  }
+  if (this.equippedGodclass) {
+    const gc = this.GODCLASS_DEFS.find(g=>g.id===this.equippedGodclass);
+    if (gc) apply(gc);
+  }
+  return bonus;
+};
+
+rpg.equipAdvancedClass = function(type, id) {
+  if (type === "sub") {
+    this.equippedSubclass = id;
+    localStorage.setItem("rpg_eq_subclass", id);
+  } else if (type === "master") {
+    this.equippedMasterclass = id;
+    localStorage.setItem("rpg_eq_masterclass", id);
+  } else if (type === "god") {
+    this.equippedGodclass = id;
+    localStorage.setItem("rpg_eq_godclass", id);
+  }
+  this.save();
+  this.renderAdvancedClasses();
+  this.updateUI();
+  const allDefs = [...Object.values(this.SUBCLASS_DEFS).flat(), ...this.MASTERCLASS_DEFS, ...this.GODCLASS_DEFS];
+  const def = allDefs.find(d=>d.id===id);
+  if (def) showToast("✅ " + def.name[this.lang] + " equipada!", 2500);
+};
+
+rpg.renderAdvancedClasses = function() {
+  const el = document.getElementById("advanced-classes-body"); if (!el) return;
+  const bossesDefeated = (this.defeatedBosses||[]).length;
+  const hasSubclass = !!this.equippedSubclass;
+  const hasMasterclass = !!this.equippedMasterclass;
+
+  const renderTier = (title, color, defs, type, ownedList, equippedId, reqDesc) => {
+    const owned = defs.filter(d => ownedList.includes(d.id));
+    const locked = defs.filter(d => !ownedList.includes(d.id));
+    return `<div class="mb-5">
+      <p class="text-[9px] font-black ${color} uppercase tracking-widest mb-2">${title}</p>
+      <p class="text-[8px] text-zinc-600 mb-2">${reqDesc}</p>
+      <div class="space-y-2">
+        ${owned.map(d => `<div class="p-2 rounded-xl border ${equippedId===d.id ? "border-yellow-600/50 bg-yellow-950/20" : "border-zinc-700 bg-zinc-950/60"} flex items-center gap-2">
+          <i data-lucide="${d.icon}" class="w-4 h-4 ${d.color} flex-shrink-0"></i>
+          <div class="flex-1">
+            <p class="text-[9px] font-black ${d.color}">${d.name[this.lang]}</p>
+            <p class="text-[7px] text-zinc-500">${d.desc[this.lang]}</p>
+          </div>
+          <button onclick="rpg.equipAdvancedClass('${type}','${d.id}')" class="text-[8px] px-2 py-0.5 rounded ${equippedId===d.id ? "bg-yellow-700 text-yellow-200" : "bg-zinc-700 hover:bg-zinc-600 text-white"} font-bold">
+            ${equippedId===d.id ? "✓ Ativa" : "Equipar"}
+          </button>
+        </div>`).join("")}
+        ${locked.length > 0 ? `<p class="text-[7px] text-zinc-700">${locked.length} bloqueada(s) — ${reqDesc}</p>` : ""}
+      </div>
+    </div>`;
+  };
+
+  const subAll = Object.values(this.SUBCLASS_DEFS).flat();
+  const bonus = this.getAdvancedClassBonus();
+
+  el.innerHTML = `
+    <div class="p-2 bg-zinc-900/80 border border-zinc-800 rounded-xl mb-4 text-[8px] text-zinc-400">
+      <p class="font-black text-zinc-300 mb-1">Bônus Ativo</p>
+      <p>ATK ×${bonus.multAtk.toFixed(1)} · HP ×${bonus.multHp.toFixed(1)} · Crit +${Math.round(bonus.addCrit*100)}% · Esq +${Math.round(bonus.addDodge*100)}%</p>
+    </div>
+    ${renderTier("⚔️ SubClasses", "text-blue-400", subAll, "sub", this.unlockedSubclasses, this.equippedSubclass, "Requer Lvl 30 + 2 Bosses + Classe Base equipada")}
+    ${renderTier("🏆 MasterClasses", "text-purple-400", this.MASTERCLASS_DEFS, "master", this.unlockedMasterclasses, this.equippedMasterclass, "Requer Lvl 80 + 6 Bosses + SubClasse equipada")}
+    ${renderTier("⚡ God Classes", "text-yellow-400", this.GODCLASS_DEFS, "god", this.unlockedGodclasses, this.equippedGodclass, "Requer Lvl 150 + 10 Bosses + MasterClass equipada")}
+  `;
+  try { lucide.createIcons({ nodes: [el] }); } catch(e) { lucide.createIcons(); }
+};
+
+// NOTE: Advanced class bonuses are applied directly inside the definitive
+// getAtk / getMaxHp / getCritChance / getDodgeChance functions below (~line 12853+)
+// and checkAdvancedClasses is called inside the CONSOLIDATED killMonster hook.
+// No intermediate wrappers needed here.
+
+// ── v23.0 — SAVE / INIT PATCHES ───────────────────────────────
 
 
 
@@ -12552,6 +12846,12 @@ rpg.getAtk = function() {
   if (cr?.allBuff) base = Math.floor(base * cr.allBuff);
   // Talent: low HP
   if (this.talentLowHpAtk && this.heroHp > 0 && this.heroHp / Math.max(1, this._baseGetMaxHp()) < 0.5) base = Math.floor(base * 1.20);
+  // T4: Frenzy - +30% ATK com combo 5+
+  if (this.talentFrenzy && (this.combo||0) >= 5) base = Math.floor(base * 1.30);
+  // T4: BossStacks - +15% ATK por boss morto (máx 10)
+  if (this.talentBossStacks) base = Math.floor(base * (1 + Math.min(this.bossKills||0, 10) * 0.15));
+  // T5: God Mode - ATK 5x por 1 turno após usar supremo
+  if (this._godModeActive) base = Math.floor(base * 5);
   // Class reputation
   if (this.getClassRepBonus) base = Math.floor(base * (1 + this.getClassRepBonus()));
   // Formation
@@ -12569,6 +12869,11 @@ rpg.getAtk = function() {
   if (this.getAura?.()?.effect === "thunder" && (this.fury||0) >= 50) base = Math.floor(base * 1.20);
   // Aura: void
   if (this.getAura?.()?.effect === "void") base = Math.floor(base * 1.40);
+  // Advanced class bonus (multAtk)
+  if (this.getAdvancedClassBonus) {
+    const _b = this.getAdvancedClassBonus();
+    if (_b.multAtk !== 1) base = Math.floor(base * _b.multAtk);
+  }
   // NG+ reward
   return Math.max(1, Math.floor(base));
 };
@@ -12627,6 +12932,11 @@ rpg.getMaxHp = function() {
     base = Math.floor(base * 0.5);
   // Aura: void
   if (this.getAura?.()?.effect === "void") base = Math.floor(base * 1.40);
+  // Advanced class bonus (multHp)
+  if (this.getAdvancedClassBonus) {
+    const _b = this.getAdvancedClassBonus();
+    if (_b.multHp !== 1) base = Math.floor(base * _b.multHp);
+  }
   return Math.max(1, Math.floor(base));
 };
 
@@ -12650,6 +12960,8 @@ rpg.getCritChance = function() {
   if (cr?.critBuff) crit += cr.critBuff;
   // Formation
   if (this.getFormation) crit += (this.getFormation().critMod || this.getFormation().mods?.crit || 0);
+  // Advanced class bonus (addCrit)
+  if (this.getAdvancedClassBonus) crit += this.getAdvancedClassBonus().addCrit;
   return Math.min(0.99, crit);
 };
 
@@ -12668,6 +12980,8 @@ rpg.getDodgeChance = function() {
   if (this.getGemBonusFor) dodge += this.getGemBonusFor("dodge", this.eqWeapon) + this.getGemBonusFor("dodge", this.eqArmor);
   // Formation
   if (this.getFormation) dodge += (this.getFormation().dodgeMod || this.getFormation().mods?.dodge || 0);
+  // Advanced class bonus (addDodge)
+  if (this.getAdvancedClassBonus) dodge += this.getAdvancedClassBonus().addDodge;
   return Math.min(0.90, dodge);
 };
 
@@ -12698,6 +13012,13 @@ rpg.spawnMonster = function() {
   this.battleLog = [];
   this.renderBattleLog && this.renderBattleLog();
   this.lastElement = null;
+  // Talent per-battle resets
+  this._spiritUsed = false;
+  this._invulnUsed = false;
+  this._godModeActive = false;
+  this._bossHalfTriggered = false;
+  this._bossLowTriggered = false;
+  if (this.talentImmortal) this._immortalCharges = 2; // repõe cargas por batalha
 
   // Boss parts init
   this.BOSS_PARTS_ACTIVE = false; this.bossPartHP = {}; this.targetedPart = null;
@@ -12845,6 +13166,21 @@ rpg.dealDamageToMonster = function(baseDmg, atkType, isUltimate) {
   if (this.grimoireLifeSteal && dmg>0) {
     const s=Math.floor(dmg*0.08); if(s>0){this.heroHp=Math.min(this.getMaxHp(),this.heroHp+s);}
   }
+  // T4: VampStrike - rouba 4% HP ao atacar
+  if (this.talentVampStrike && dmg>0) {
+    const s=Math.floor(this.getMaxHp()*0.04);
+    if(s>0){this.heroHp=Math.min(this.getMaxHp(),this.heroHp+s); this.showDamage?.("🩸 +"+formatNumber(s),"heal");}
+  }
+  // T4: CascadeCrit - 30% chance de crítico encadear outro ataque
+  if (this.talentCascadeCrit && atkType==="atk" && Math.random()<0.30 && this.monster?.hp>0) {
+    const cascDmg=Math.floor(this.getAtk()*0.5);
+    if(this.monster && this.monster.hp>0){ this.monster.hp=Math.max(0,this.monster.hp-cascDmg); this.showDamage?.("⚡ CASCADE -"+formatNumber(cascDmg),"dmg-effective"); }
+  }
+  // T5: GodMode - ativa após usar supremo (fury chegou a 99 neste ataque)
+  if (this.talentGodMode && isUltimate && !this._godModeActive) {
+    this._godModeActive = true;
+    showToast("⚡ MODO DEUS! Próximo turno ATK 5x!", 2000);
+  }
   // Mutation vampiric
   if ((this.permVampBonus||0)>0 && dmg>0) {
     const s=Math.floor(dmg*this.permVampBonus); if(s>0){this.heroHp=Math.min(this.getMaxHp(),this.heroHp+s);}
@@ -12948,11 +13284,29 @@ rpg.executeMonsterAttack = function() {
     const r=Math.floor(this.getMaxHp()*0.02);
     this.heroHp=Math.min(this.getMaxHp(),this.heroHp+r);
   }
+  // Talent T4: Regen T4 (+5% HP/turno)
+  if (this.talentRegenT4) {
+    const r=Math.floor(this.getMaxHp()*0.05);
+    this.heroHp=Math.min(this.getMaxHp(),this.heroHp+r);
+  }
+  // Talent T5: Colossus (+10% HP/turno)
+  if (this.talentColossus) {
+    const r=Math.floor(this.getMaxHp()*0.10);
+    this.heroHp=Math.min(this.getMaxHp(),this.heroHp+r);
+  }
   // Shock: reduce damage
   const shockMult = this.statusEffects?.shock ? 0.7 : 1;
   if (this.statusEffects?.shock) {
     this.statusEffects.shock.turns--;
     if (this.statusEffects.shock.turns<=0) this.removeStatus?.("shock");
+  }
+  // T4: HolyArmor - reduz 30% do dano recebido
+  if (this.talentHolyArmor && this.monster) {
+    const origDmg = this.monster.dmg;
+    this.monster.dmg = Math.floor(origDmg * 0.70);
+    this._lastHpBeforeMonster = this.heroHp;
+    _ORIG_execMonster();
+    this.monster.dmg = origDmg;
   }
   // Poison tick on hero
   if (this.statusEffects?.poison) {
@@ -12970,18 +13324,37 @@ rpg.executeMonsterAttack = function() {
     if (!this._bossHalfTriggered && pct<=0.5) { this._bossHalfTriggered=true; this.showBossDialogue?.("half"); }
     if (!this._bossLowTriggered  && pct<=0.2) { this._bossLowTriggered=true;  this.showBossDialogue?.("low");  }
   }
-  // Apply shock damage reduction
-  if (shockMult<1 && this.monster) {
-    const sd=this.monster.dmg; this.monster.dmg=Math.floor(sd*shockMult);
-    _ORIG_execMonster();
-    this.monster.dmg=sd;
-  } else {
-    _ORIG_execMonster();
+  // Apply shock + original call (only if HolyArmor didn't already call it)
+  if (!this.talentHolyArmor) {
+    if (shockMult<1 && this.monster) {
+      const sd=this.monster.dmg; this.monster.dmg=Math.floor(sd*shockMult);
+      this._lastHpBeforeMonster = this.heroHp;
+      _ORIG_execMonster();
+      this.monster.dmg=sd;
+    } else {
+      this._lastHpBeforeMonster = this.heroHp;
+      _ORIG_execMonster();
+    }
   }
   // Spirit shield talent
   if (this.talentSpiritShield && this.heroHp<=0 && !this._spiritUsed) {
     this._spiritUsed=true; this.heroHp=1; this.updateHpBars?.(); this.showDamage?.("🛡 ESPÍRITO!","dmg-parry");
   }
+  // T4: Immortal - 2 cargas de imunidade por batalha
+  if (this.talentImmortal && this.heroHp<=0 && (this._immortalCharges||0)>0) {
+    this._immortalCharges--; this.heroHp=Math.floor(this.getMaxHp()*0.10);
+    this.updateHpBars?.(); this.showDamage?.("⚡ IMORTAL! ("+this._immortalCharges+" restantes)","dmg-parry");
+  }  // T4: Thorns - reflete 20% do dano recebido
+  if (this.talentThorns && this.monster) {
+    const dmgTaken = Math.max(0, (this._lastHpBeforeMonster||this.heroHp) - this.heroHp);
+    if (dmgTaken>0) {
+      const reflect=Math.floor(dmgTaken*0.20);
+      this.monster.hp=Math.max(0,this.monster.hp-reflect);
+      this.showDamage?.("🌵 -"+formatNumber(reflect)+" (Espinhos)","dmg-effective");
+    }
+  }
+  // T5: God Mode expira após turno do monstro
+  if (this._godModeActive) this._godModeActive=false;
   if (this.monster) this.addLog?.(this.monster.name+" atacou "+this.heroName,"text-red-300");
 };
 
@@ -13079,6 +13452,16 @@ rpg.killMonster = function() {
     this.heroHp = Math.min(this.getMaxHp(), this.heroHp + h);
     this.showDamage && this.showDamage("💚 +" + formatNumber(h), "heal");
     this.updateHpBars && this.updateHpBars();
+  }
+  // T4: BossStacks - conta kills de boss
+  if (wasBosFight && this.talentBossStacks) {
+    this.bossKills = Math.min((this.bossKills||0) + 1, 10);
+    showToast("💀 Boss Stack! ATK +" + (this.bossKills * 15) + "% (" + this.bossKills + "/10)", 2000);
+  }
+  // T5: GodMode - ativa após usar supremo (fury >= 99 no momento do kill)
+  if (this.talentGodMode && wasBosFight) {
+    this._godModeActive = true;
+    showToast("⚡ MODO DEUS ATIVADO! ATK 5x próximo turno!", 2500);
   }
 
   // ── Wanderer check ──
@@ -13183,6 +13566,9 @@ rpg.killMonster = function() {
   // ── Secret classes check ──
   this.checkSecretClasses && this.checkSecretClasses();
 
+  // ── Advanced classes check (on boss kill) ──
+  if (wasBosFight) this.checkAdvancedClasses && this.checkAdvancedClasses();
+
   this.save();
   this.updateUI();
 };
@@ -13211,6 +13597,7 @@ function openProcDungeon()   { rpg.renderProcDungeon();     document.getElementB
 function openRuneModal()     { rpg.renderRuneModal();       document.getElementById('rune-modal').classList.add('active'); }
 function openSeason()        { rpg.renderSeason();          document.getElementById('season-modal').classList.add('active'); }
 function openSecretClasses() { rpg.renderSecretClasses();   document.getElementById('secret-classes-modal').classList.add('active'); }
+function openAdvancedClasses() { rpg.renderAdvancedClasses(); document.getElementById('advanced-classes-modal').classList.add('active'); }
 function openSpeedRun()      { rpg.renderSpeedRun();        document.getElementById('speedrun-modal').classList.add('active'); }
 function openTalentTree()    { rpg.renderTalentTree();      document.getElementById('talent-modal').classList.add('active'); }
 function openTourney()       { rpg.renderTourney();         document.getElementById('tourney-modal').classList.add('active'); }

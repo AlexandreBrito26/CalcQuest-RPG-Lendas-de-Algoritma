@@ -2176,6 +2176,7 @@
             <button onclick="openGrimoire()"   class="sub-pill" style="border-color:rgba(217,70,239,0.4);color:#e879f9;"><i data-lucide="book-marked" class="w-3 h-3"></i><span>Grimório</span></button>
             <button onclick="openLegacy()"     class="sub-pill" style="border-color:rgba(56,189,248,0.4);color:#7dd3fc;"><i data-lucide="shield-half" class="w-3 h-3"></i><span>Legados</span></button>
             <button onclick="openSecretClasses()" class="sub-pill" style="border-color:rgba(167,139,250,0.4);color:#c4b5fd;"><i data-lucide="lock-keyhole" class="w-3 h-3"></i><span>Secretas</span></button>
+            <button onclick="openAdvancedClasses()" class="sub-pill" style="border-color:rgba(250,204,21,0.4);color:#fde047;"><i data-lucide="crown" class="w-3 h-3"></i><span>Sub/Master</span></button>
           </div>
         </div>
         <!-- Talentos / Auras accordion -->
@@ -3034,6 +3035,19 @@
       <div id="secret-classes-body" class="max-h-[65vh] overflow-y-auto pr-1 pb-2 hide-scrollbar"></div>
     </div>
   </div>
+
+  <!-- Advanced Classes Modal (SubClasses / MasterClasses / God Classes) -->
+  <div id="advanced-classes-modal" class="modal-overlay fixed inset-0 flex items-center justify-center">
+    <div class="modal-content glass-panel bg-zinc-900/90 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-3 border-b border-zinc-800 pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+          <i data-lucide="crown" class="w-6 h-6 text-yellow-400"></i> Sub / Master / God
+        </h2>
+        <button onclick="closeModal('advanced-classes-modal')" class="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition text-zinc-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="advanced-classes-body" class="max-h-[70vh] overflow-y-auto pr-1 pb-2 hide-scrollbar"></div>
+    </div>
+  </div>
   <!-- Speed Run Timer overlay -->
   <div id="sr-timer-box" class="hidden fixed top-20 left-1/2 -translate-x-1/2 z-[200] bg-black/80 border border-teal-600/60 rounded-xl px-4 py-2 text-center">
     <p class="text-[8px] font-black text-teal-400 uppercase tracking-widest">⏱ SPEED RUN</p>
@@ -3196,6 +3210,7 @@
   <script src="modules/boss-parts-destructible.js"></script>
   <script src="modules/ui-live-sync.js"></script>
   <script src="modules/session-stats.js"></script>
+  <script src="modules/sound-system.js"></script>
     <script>
     // TAB SYSTEM
     function switchTab(tab) {
