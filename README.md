@@ -1,174 +1,96 @@
-Link do Jogo : https://calc-quest-rpg-lendas-de-algoritma.vercel.app/
+# ⚔️ CalcQuest: Lendas de Algoritma
 
-⚔️ CalcQuest: Lendas de Algoritma
+> *"E se uma simples calculadora pudesse evoluir para um RPG?"*
 
-CalcQuest é um experimento criativo que começou com uma simples ideia:
-transformar uma calculadora web em um RPG de combate em tempo real.
+🔗 **[Jogar Agora](https://calcquest-rpg.netlify.app/)** · [Changelog Completo](CHANGELOG.html)
 
-O projeto evoluiu para um Idle/Active RPG 2.5D, desenvolvido inteiramente dentro de um único arquivo HTML, explorando ao máximo o potencial do Vanilla JavaScript.
+---
 
-O resultado é um pequeno jogo com mecânicas de RPG, combate ATB, progressão de personagem e narrativa.
+CalcQuest é um Idle/Active RPG 2.5D desenvolvido inteiramente em Vanilla JS dentro de um único arquivo HTML. O que começou como um experimento criativo evoluiu para um jogo com mais de 30 sistemas interligados, narrativa em atos e conteúdo pós-game.
 
-🎮 Demonstração
+---
 
-Um RPG completo rodando em apenas um único index.html
+## 🎮 O Jogo
 
-Sem bundlers
+- **Combate ATB** em tempo real com parry, esquiva e combos condicionais
+- **30+ sistemas** incluindo runas, gemas, forja, alquimia, auras, mutações e mais
+- **Narrativa** dividida em atos com escolhas que afetam o mundo
+- **Progressão profunda**: classes → especializações → masterclasses → god classes
+- **NG+** reescrito com multiplicadores escaláveis e conteúdo exclusivo por ciclo
+- **Modo Infinito** pós-NG+4 com escala sem teto
+- **Diário do Herói** com entradas narrativas geradas via Anthropic API
 
-Sem frameworks pesados
+---
 
-Sem múltiplos arquivos JS/CSS
+## 🛠️ Tecnologias
 
-Tudo acontece dentro do mesmo documento.
+| Tecnologia | Uso |
+|---|---|
+| **HTML5** | Estrutura completa do jogo em um único arquivo |
+| **Vanilla JavaScript** | Motor de jogo, game loop, combate, progressão |
+| **Tailwind CSS (CDN)** | Interface responsiva com estética Dark Fantasy |
+| **Lucide Icons** | Inimigos e elementos visuais como SVG manipulado |
+| **Anthropic API** | Geração narrativa no Diário do Herói |
 
-🛠️ Tecnologias Utilizadas
-HTML5
+Sem bundlers. Sem frameworks pesados. Sem múltiplos arquivos JS/CSS.
 
-Estrutura completa do jogo e organização da interface.
+---
 
-Tailwind CSS (CDN)
+## 📦 Estrutura
 
-Utilizado para:
+```
+CalcQuest-RPG-Lendas-de-Algoritma-main/
+├── index.html          # Interface do jogo
+├── game.js             # Motor completo (~16.000 linhas)
+├── CHANGELOG.html      # Changelog interativo completo
+├── README.md
+└── modules/            # 33 módulos de expansão
+    ├── alchemy-system.js
+    ├── bestiary-enhanced.js
+    ├── boss-parts-destructible.js
+    ├── class-synergy.js
+    ├── codex-lore.js
+    ├── combat-elements.js
+    ├── combat-hud.js
+    ├── day-night-effects.js
+    ├── hero-diary.js
+    ├── living-village.js
+    ├── mobile-optimizer.js
+    ├── monster-evolution.js
+    ├── ng-plus-v3.js
+    ├── post-game-region.js
+    ├── weather-system.js
+    ├── world-map.js
+    └── ... (e mais 17 módulos)
+```
 
-Interface responsiva
+---
 
-Estética Dark Fantasy
+## 🗺️ Versões
 
-Glassmorphism
+| Versão | Nome | Destaques |
+|---|---|---|
+| **v23.0** | A Ascensão das Masterclasses | God Classes, Banco, Modo Infinito, Protocolo Primordial |
+| **v22.0** | O Caos e a Glória | Notoriedade, NG+ v3, Mutações, Auras, Classes Secretas |
+| **v21.0** | O Mundo Vivo | Skill Chains, Formações, Masmorras Procedurais, Karma |
+| **v20.0** | O Mapa e os Habitantes | Mapa SVG, NPCs, Boss com Partes destrutíveis |
+| **v19.0** | A Economia do Caos | Árvore de Talentos, Forja, Gemas, Relíquias Amaldiçoadas |
+| **v18.0** | As Runas do Abismo | Runas, Wave Survival, Dungeon Diária, Modo Desafio |
+| **v17.0** | Os Elementos Despertam | Elementos, Status Effects, Break System, 5ª Skill |
 
-Layout mobile-first
+→ [Ver changelog completo](CHANGELOG.html)
 
-Vanilla JavaScript
+---
 
-Motor de jogo desenvolvido manualmente incluindo:
+## 📱 Mobile & APK
 
-Game Loop com requestAnimationFrame
+O jogo roda em qualquer browser. Para transformar em APK Android:
 
-Sistema de combate ATB (Active Time Battle)
+1. Abra o `index.html` em Android Studio via WebView
+2. Compile normalmente — pronto para instalar
 
-Sistema de partículas
+---
 
-Detecção de colisões
+## 📄 Licença
 
-Progressão de RPG
-
-Gerenciamento de estados do jogo
-
-Lucide Icons
-
-Os inimigos e elementos visuais são ícones SVG manipulados por código, eliminando a necessidade de imagens PNG ou JPG.
-
-🐉 Mecânicas do Jogo
-⚔️ Combate ATB (Active Time Battle)
-
-Os inimigos possuem barras de velocidade e atacam em tempo real.
-
-Exemplos de inimigos:
-
-Slime Numérico
-
-Dragão Logarítmico
-
-🛡️ Sistema de Defesa
-
-O jogador pode:
-
-Defender
-
-Esquivar
-
-Atacar
-
-Se o botão Defender for usado no momento certo, ativa:
-
-Parry Perfeito
-
-Resultado:
-
-Reflete dano
-
-Enche a barra de fúria
-
-🧙 Sistema de RPG
-
-Inclui:
-
-Classes (Guerreiro, Mago, etc.)
-
-Equipamentos
-
-Relíquias passivas
-
-Sistema de combos
-
-Progressão de nível
-
-Sistema de XP
-
-📖 Narrativa
-
-A história é dividida em atos, inspirada em Visual Novels, e acompanha a jornada para derrotar o Rei Demônio de Algoritma.
-
-📚 Bestiário
-
-Todos os inimigos derrotados são registrados em uma enciclopédia interna do jogo.
-
-💾 Sistema de Save
-
-O progresso do jogador é salvo automaticamente usando:
-
-localStorage
-
-Assim o progresso nunca é perdido.
-
-📱 Mobile & APK
-
-Como todo o jogo está contido em um único arquivo HTML, é possível transformar o projeto facilmente em um aplicativo Android.
-
-Utilizando:
-
-Android Studio + WebView
-
-O jogo pode ser compilado em um APK instalável em poucos minutos.
-
-🎯 Objetivo do Projeto
-
-Explorar até onde é possível levar:
-
-HTML
-
-CSS
-
-Vanilla JavaScript
-
-dentro de um único arquivo web.
-
-O projeto demonstra que mesmo sem frameworks modernos é possível criar experiências interativas complexas.
-
-🚀 Possíveis Melhorias Futuras
-
-Novas classes
-
-Sistema de habilidades
-
-Novos monstros
-
-Modo multiplayer local
-
-Sistema de conquistas
-
-Melhor sistema de partículas
-
-🧑‍💻 Autor
-
-Projeto desenvolvido como experimento de Game Dev + Web Development.
-
-🧠 Inspiração
-
-A ideia surgiu a partir da pergunta:
-
-"E se uma simples calculadora pudesse evoluir para um RPG?"
-
-📜 Licença
-
-Projeto open-source para estudo e experimentação.
+Projeto open-source para estudo e experimentação em Game Dev + Web Development.
