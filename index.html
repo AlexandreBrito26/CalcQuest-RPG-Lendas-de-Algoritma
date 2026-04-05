@@ -1778,7 +1778,7 @@
       }
       #hero-hp-bar, #monster-hp-bar { contain: strict; }
       .acc-sub { transition: none !important; }
-      body.low-perf-mode .btn-3d { box-shadow: none !important; text-shadow: none !important; }
+      /* low-perf-mode desativado na v4 — sem modo econômico */
 
       /* ── Layout: oculta elementos que consomem espaço desnecessário ── */
       /* Título CALCQUEST e era badge — economiza ~70px de altura */
@@ -2114,10 +2114,11 @@
             <i data-lucide="flame" class="w-3.5 h-3.5"></i> Prestígio
             <i data-lucide="chevron-down" class="acc-chevron"></i>
           </button>
-          <div id="acc-prestige" class="acc-sub">
-            <button onclick="openPrestige()"  class="sub-pill" style="border-color:rgba(249,115,22,0.4);color:#fb923c;"><i data-lucide="flame" class="w-3 h-3"></i><span>Reiniciar</span></button>
-            <button onclick="openNgPlus()"    class="sub-pill" style="border-color:rgba(52,211,153,0.4);color:#6ee7b7;"><i data-lucide="refresh-cw" class="w-3 h-3"></i><span>NG+</span></button>
-            <button onclick="openMemories()"  class="sub-pill" style="border-color:rgba(168,85,247,0.4);color:#c084fc;"><i data-lucide="brain" class="w-3 h-3"></i><span>Legado</span></button>
+          <div id="acc-prestige" class="acc-sub cols-4">
+            <button onclick="openPrestige()"    class="sub-pill" style="border-color:rgba(249,115,22,0.4);color:#fb923c;"><i data-lucide="flame" class="w-3 h-3"></i><span>Reiniciar</span></button>
+            <button onclick="openNgPlus()"      class="sub-pill" style="border-color:rgba(52,211,153,0.4);color:#6ee7b7;"><i data-lucide="refresh-cw" class="w-3 h-3"></i><span>NG+</span></button>
+            <button onclick="openMemories()"    class="sub-pill" style="border-color:rgba(168,85,247,0.4);color:#c084fc;"><i data-lucide="brain" class="w-3 h-3"></i><span>Legado</span></button>
+            <button onclick="openClassPanel()"  class="sub-pill" style="border-color:rgba(249,115,22,0.5);color:#fb923c;"><i data-lucide="user-cog" class="w-3 h-3"></i><span>Classes</span></button>
           </div>
         </div>
       </div>
@@ -3213,6 +3214,7 @@
   <script src="modules/sound-system.js"></script>
   <script src="modules/mega-patch-v24.js"></script>
   <script src="modules/changelog-unified.js"></script>
+  <script src="modules/v25-megafix.js"></script>
     <script>
     // TAB SYSTEM
     function switchTab(tab) {
