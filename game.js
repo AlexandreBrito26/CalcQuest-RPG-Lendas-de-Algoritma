@@ -263,13 +263,26 @@ function applyLanguage() {
 }
 
 function formatNumber(num) {
-  if (num === null || num === undefined) return 0;
-  if (num >= 1e18) return (num / 1e18).toFixed(1).replace(/\.0$/, "") + "Qi";
-  if (num >= 1e15) return (num / 1e15).toFixed(1).replace(/\.0$/, "") + "Qa";
-  if (num >= 1e12) return (num / 1e12).toFixed(1).replace(/\.0$/, "") + "T";
-  if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, "") + "B";
-  if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
-  if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+  if (num === null || num === undefined || isNaN(num)) return 0;
+  num = Number(num);
+  if (num < 0) return "-" + formatNumber(-num);
+  if (num === Infinity) return "\u221e";
+  if (num >= 1e36) {
+    var _exp = Math.floor(Math.log10(num));
+    var _base = (num / Math.pow(10, _exp)).toFixed(1).replace(/\.0$/, "");
+    return _base + "e" + _exp;
+  }
+  var _S = [
+    [1e33,"Dc"],[1e30,"No"],[1e27,"Oc"],[1e24,"Sp"],
+    [1e21,"Sx"],[1e18,"Qi"],[1e15,"Qa"],
+    [1e12,"T"],[1e9,"B"],[1e6,"M"],[1e3,"K"]
+  ];
+  for (var _i = 0; _i < _S.length; _i++) {
+    if (num >= _S[_i][0]) {
+      var _v = num / _S[_i][0];
+      return _v.toFixed(_v >= 100 ? 0 : _v >= 10 ? 1 : 2).replace(/\.0+$/, "") + _S[_i][1];
+    }
+  }
   return num;
 }
 

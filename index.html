@@ -1136,6 +1136,9 @@
     .modal-overlay {
       background: rgba(0, 0, 0, 0.9);
       backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
@@ -1147,7 +1150,7 @@
     .modal-overlay.active {
       opacity: 1;
       pointer-events: auto;
-      z-index: 300;
+      z-index: 9999;
     }
 
     .modal-content {
@@ -1921,6 +1924,21 @@
       display: none !important;
     }
 
+    /* ══ DOCK REMOVIDO — acesso rápido desativado para limpar HUD ══ */
+    #unified-dock,
+    .unified-dock-bar,
+    .quick-dock,
+    #dock-drawer,
+    .dock-drawer-overlay {
+      display: none !important;
+      pointer-events: none !important;
+    }
+
+    /* ══ BOSS PARTS REMOVIDO — partes destrutíveis retiradas da HUD ══ */
+    #boss-parts-ui {
+      display: none !important;
+    }
+
   </style>
   <div id="app-shell">
   <div id="game-panel">
@@ -2161,6 +2179,32 @@
             <button onclick="openChallenge()" class="sub-pill" style="border-color:rgba(244,63,94,0.4);color:#fb7185;"><i data-lucide="skull" class="w-3 h-3"></i><span>Desafio</span></button>
             <button onclick="openOracle()"    class="sub-pill" style="border-color:rgba(168,85,247,0.4);color:#c084fc;"><i data-lucide="eye" class="w-3 h-3"></i><span>Oráculo</span></button>
             <button onclick="openArena()"     class="sub-pill" style="border-color:rgba(239,68,68,0.4);color:#f87171;"><i data-lucide="swords" class="w-3 h-3"></i><span>Arena</span></button>
+          </div>
+        </div>
+        <!-- End-Game accordion -->
+        <div class="acc-wrap">
+          <button onclick="toggleAcc(this, 'acc-endgame')" class="acc-trigger btn-3d w-full py-2.5 rounded-xl border text-white font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 pr-8" style="background:linear-gradient(135deg,#9a3412,#b45309);border-color:rgba(251,146,60,0.5);">
+            <i data-lucide="infinity" class="w-3.5 h-3.5"></i> End-Game
+            <i data-lucide="chevron-down" class="acc-chevron"></i>
+          </button>
+          <div id="acc-endgame" class="acc-sub cols-4">
+            <button onclick="openTower()"       class="sub-pill" style="border-color:rgba(249,115,22,0.4);color:#fb923c;"><i data-lucide="building-2" class="w-3 h-3"></i><span>Torre ∞</span></button>
+            <button onclick="openFracture()"    class="sub-pill" style="border-color:rgba(129,140,248,0.4);color:#818cf8;"><i data-lucide="zap" class="w-3 h-3"></i><span>Fratura</span></button>
+            <button onclick="openSimulacro()"   class="sub-pill" style="border-color:rgba(232,121,249,0.4);color:#e879f9;"><i data-lucide="play-circle" class="w-3 h-3"></i><span>Simulacro</span></button>
+            <button onclick="openLegacySystem()" class="sub-pill" style="border-color:rgba(110,231,183,0.4);color:#6ee7b7;"><i data-lucide="tree-pine" class="w-3 h-3"></i><span>Legado</span></button>
+          </div>
+        </div>
+        <!-- Progressão Além accordion -->
+        <div class="acc-wrap">
+          <button onclick="toggleAcc(this, 'acc-alem')" class="acc-trigger btn-3d w-full py-2.5 rounded-xl border text-white font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 pr-8" style="background:linear-gradient(135deg,#1e1b4b,#312e81);border-color:rgba(167,139,250,0.4);">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Além
+            <i data-lucide="chevron-down" class="acc-chevron"></i>
+          </button>
+          <div id="acc-alem" class="acc-sub cols-4">
+            <button onclick="openAscension()"    class="sub-pill" style="border-color:rgba(251,191,36,0.4);color:#fbbf24;"><i data-lucide="crown" class="w-3 h-3"></i><span>Ascensão</span></button>
+            <button onclick="openCycleTourney()" class="sub-pill" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;"><i data-lucide="refresh-cw" class="w-3 h-3"></i><span>Ciclo</span></button>
+            <button onclick="openWeeklyBoss()"   class="sub-pill" style="border-color:rgba(239,68,68,0.4);color:#f87171;"><i data-lucide="skull" class="w-3 h-3"></i><span>Lendário</span></button>
+            <button onclick="openCoopDungeon()"  class="sub-pill" style="border-color:rgba(56,189,248,0.4);color:#38bdf8;"><i data-lucide="users" class="w-3 h-3"></i><span>Co-op</span></button>
           </div>
         </div>
       </div>
@@ -3192,7 +3236,8 @@
   <script src="modules/save-system.js"></script>
   <script src="modules/quest-tracker.js"></script>
   <script src="modules/inventory-ui.js"></script>
-  <script src="modules/ng-plus-v3.js"></script>
+  <!-- ng-plus-v4.js carregado após fix-final via script no final -->
+  <script src="modules/class-synergy.js"></script>
   <script src="modules/hero-diary.js"></script>
   <script src="modules/world-map.js"></script>
   <script src="modules/damage-numbers.js"></script>
@@ -3203,18 +3248,43 @@
   <script src="modules/game-over.js"></script>
   <script src="modules/mobile-optimizer.js"></script>
   <script src="modules/codex-lore.js"></script>
-  <script src="modules/unified-dock.js"></script>
+  <!-- unified-dock desativado: acesso rápido removido por poluir a HUD -->
+  <!-- <script src="modules/unified-dock.js"></script> -->
   <script src="modules/monster-evolution.js"></script>
   <script src="modules/post-game-region.js"></script>
   <script src="modules/living-village.js"></script>
   <script src="modules/alchemy-system.js"></script>
-  <script src="modules/boss-parts-destructible.js"></script>
+  <!-- boss-parts-destructible desativado: partes removidas da HUD de combate -->
+  <!-- <script src="modules/boss-parts-destructible.js"></script> -->
   <script src="modules/ui-live-sync.js"></script>
   <script src="modules/session-stats.js"></script>
   <script src="modules/sound-system.js"></script>
   <script src="modules/mega-patch-v24.js"></script>
   <script src="modules/changelog-unified.js"></script>
   <script src="modules/v25-megafix.js"></script>
+  <script src="modules/fix-final.js"></script>
+  <!-- ng-plus-v5 substituído pelo ng-plus-v6.js (fix definitivo) -->
+  <!-- <script src="modules/ng-plus-v4.js"></script> -->
+  <!-- <script src="modules/ng-plus-v5.js"></script> -->
+  <script src="modules/ng-plus-v6.js"></script>
+  <script src="modules/combat-hud-fix.js"></script>
+  <script src="modules/prestige-plus.js"></script>
+  <script src="modules/prestige-infinite.js"></script>
+  <script src="modules/vip-system.js"></script>
+  <script src="modules/vip-system-v9.js"></script>
+  <script src="modules/core-bugfixes.js"></script>
+  <script src="modules/daily-missions-plus.js"></script>
+  <script src="modules/vip-mega-integration.js"></script>
+  <script src="modules/endgame-tower.js"></script>
+  <script src="modules/endgame-legacy.js"></script>
+  <script src="modules/endgame-social.js"></script>
+  <script src="modules/modules-plus.js"></script>
+  <script src="modules/auto-attack-boss-fix.js"></script>
+  <script src="modules/battle-log-autoatk-fix.js"></script>
+  <script src="modules/prestige-multibuy.js"></script>
+  <script src="modules/profile-animations.js"></script>
+  <script src="modules/profile-vip-fix.js"></script>
+  <script src="modules/quick-menu.js"></script>
     <script>
     // TAB SYSTEM
     function switchTab(tab) {
