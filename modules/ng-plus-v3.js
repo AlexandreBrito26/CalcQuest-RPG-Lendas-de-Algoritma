@@ -239,15 +239,32 @@
   // 4. ABRIR O MODAL (wrapper transparente sobre o sistema nativo)
   // ══════════════════════════════════════════════════════════════
   function openNgPlusModal() {
-    // Renderiza conteúdo no ngplus-body existente
-    renderContent();
-
-    // Abre usando o sistema nativo do jogo (classe .active)
+    // Força o modal aberto independente de z-index/display externo
     const modal = document.getElementById('ngplus-modal');
     if (!modal) {
       console.error('[NgPlusV3] ngplus-modal não encontrado no DOM!');
       return;
     }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.zIndex = '9999';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+
+    // Se rpg ainda não carregou, abre sem conteúdo customizado
+    const r = safeRpg();
+    if (!r || typeof r.killMonster !== 'function') {
+      if (r && typeof r.renderNgPlus === 'function') {
+        try { r.renderNgPlus(); } catch(e) {}
+      }
+      return;
+    }
+
+    // Renderiza conteúdo no ngplus-body existente
+    renderContent();
 
     // Garante classes corretas para a animação CSS funcionar
     modal.classList.add('active');
@@ -544,6 +561,7 @@
   // ══════════════════════════════════════════════════════════════
   // Substitui SEMPRE — não usa || — para garantir que a v3 vence
   window.openNgPlus = openNgPlusModal;
+  window.openNgPlus._isNgV3 = true;
 
   // Também patches o rpg.renderNgPlus para usar o nosso render
   function patchRpgRender() {
@@ -596,7 +614,11 @@
 
   // openNgPlus disponível IMEDIATAMENTE (antes do rpg carregar)
   // para que o botão no menu nunca falhe
-  window.openNgPlus = openNgPlusModal;
+  // Só define se ainda não foi sobrescrito por outro módulo posterior
+  if (typeof window.openNgPlus !== 'function' || window.openNgPlus._isNgV3) {
+    window.openNgPlus = openNgPlusModal;
+    window.openNgPlus._isNgV3 = true;
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => waitForRpg(init));

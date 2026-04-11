@@ -152,42 +152,13 @@
   // 3. FIX NG+ — GARANTIR QUE O BOTÃO ABRE O MODAL
   // ─────────────────────────────────────────────────────────────────────────
   function fixNgPlus() {
-    // Se openNgPlus já está definido pelo ng-plus-v3.js, apenas asseguramos
-    // que o modal é visível quando chamado
-    const origOpen = window.openNgPlus;
-    window.openNgPlus = function() {
-      // Garante que o modal existe e está visível
-      const modal = document.getElementById('ngplus-modal');
-      if (modal) {
-        // Force z-index alto para evitar conflitos
-        modal.style.zIndex = '9999';
-        modal.style.display = 'flex';
-        modal.style.position = 'fixed';
-        modal.style.inset = '0';
-        modal.style.alignItems = 'center';
-        modal.style.justifyContent = 'center';
-      }
-      // Chama o original (ng-plus-v3.js)
-      if (typeof origOpen === 'function' && origOpen !== window.openNgPlus) {
-        origOpen();
-      } else {
-        // Fallback manual
-        if (modal) {
-          modal.classList.add('active');
-          // Tenta renderizar conteúdo se rpg disponível
-          if (typeof rpg !== 'undefined' && typeof rpg.renderNgPlus === 'function') {
-            rpg.renderNgPlus();
-          }
-        }
-      }
-    };
-
-    // Patch no botão NG+ do menu para garantir que chama a função correta
+    // ng-plus-v4.js e fix-final.js gerem o CSS do modal — removido daqui para evitar conflitos
+    // Garante que botões inline usam a função mais recente
     setTimeout(() => {
       document.querySelectorAll('[onclick*="openNgPlus"]').forEach(btn => {
         btn.onclick = () => window.openNgPlus();
       });
-    }, 1000);
+    }, 1500);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -270,20 +241,28 @@
   // Modal de classes — UI completa com 5 tiers
   function openClassPanel() {
     const r = window.rpg;
-    if (!r) { alert('Jogo não carregado!'); return; }
+    if (!r || typeof r.classes === 'undefined') {
+      // RPG ainda inicializando — tenta novamente em 500ms
+      if (typeof showToast === 'function') showToast('⏳ Carregando...', 1500);
+      setTimeout(openClassPanel, 600);
+      return;
+    }
 
-    // Checar novas classes
-    if (typeof r.checkAdvancedClasses === 'function') r.checkAdvancedClasses();
-    checkUltraclasses(r);
+    try {
+      // Checar novas classes
+      if (typeof r.checkAdvancedClasses === 'function') r.checkAdvancedClasses();
+      checkUltraclasses(r);
+    } catch(e) { console.warn('[V25] checkClasses:', e); }
 
     let modal = document.getElementById('v25-class-modal');
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'v25-class-modal';
       modal.className = 'modal-overlay';
+      // Sem display inline — o CSS .active cuida disso
       modal.style.cssText = `
         position:fixed;inset:0;z-index:9999;
-        display:flex;align-items:center;justify-content:center;
+        align-items:center;justify-content:center;
         background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);
       `;
       document.body.appendChild(modal);
@@ -296,25 +275,28 @@
     const lang = r.lang || 'pt';
 
     function renderTierSection(tier, defs, getLabel, isBase) {
+      try {
       const tc = TIER_CONFIG[tier];
       const unlockedIds = getUnlockedForTier(r, tier);
       const equippedId = equipped[tier];
+      const rawDefs = isBase ? Object.values(defs || {}) : (Array.isArray(defs) ? defs : []);
       const filteredDefs = isBase
-        ? Object.values(defs)
-        : defs.filter(d => unlockedIds.includes(d.id));
+        ? rawDefs.filter(d => d && d.id)
+        : rawDefs.filter(d => d && d.id && unlockedIds.includes(d.id));
       const lockedDefs = isBase
         ? []
-        : defs.filter(d => !unlockedIds.includes(d.id));
+        : rawDefs.filter(d => d && d.id && !unlockedIds.includes(d.id));
 
-      const allDefs = [...filteredDefs, ...lockedDefs.slice(0, 3)]; // show up to 3 locked
+      const allDefs = [...filteredDefs, ...lockedDefs.slice(0, 3)];
 
       if (!isBase && allDefs.length === 0) return '';
 
       const cards = allDefs.map(c => {
+        try {
         const isLocked = !isBase && !unlockedIds.includes(c.id);
         const isActive = c.id === equippedId || (isBase && c.id === equipped.base);
-        const name = isBase ? c.name[lang] : (c.name ? c.name[lang] || c.name.pt : c.id);
-        const desc = isBase ? c.desc[lang] : (c.desc ? c.desc[lang] || c.desc.pt : '');
+        const name = (c.name && (c.name[lang] || c.name.pt || c.name.en)) || c.id || '???';
+        const desc = (c.desc && (c.desc[lang] || c.desc.pt || c.desc.en)) || '';
         const icon = c.icon || 'star';
         const reqText = isLocked && c.req
           ? `Req: Lv${c.req.level || '?'} · ${c.req.bosses || 0} bosses${c.req.masterclass ? ' · MasterClass' : ''}`
@@ -354,6 +336,7 @@
             ${btnHtml}
           </div>
         `;
+        } catch(cardErr) { console.warn('[V25] card error:', cardErr); return ''; }
       }).join('');
 
       return `
@@ -368,6 +351,7 @@
           </div>
         </div>
       `;
+      } catch(sectionErr) { console.error('[V25] section error:', sectionErr); return ''; }
     }
 
     const html = `
@@ -413,9 +397,13 @@
       </div>
     `;
 
-    modal.innerHTML = html;
+    try {
+      modal.innerHTML = html;
+    } catch(e) {
+      console.error('[V25] Erro ao renderizar modal de Classes:', e);
+      return;
+    }
     modal.classList.add('active');
-    modal.style.display = 'flex';
   }
 
   // Tab switcher para o modal de classes
@@ -557,21 +545,20 @@
         .living-village-bar { display: none !important; }
         #village-status-bar  { display: none !important; }
 
-        /* NG+ modal — z-index sempre alto */
-        #ngplus-modal.active {
-          z-index: 9999 !important;
-          display: flex !important;
-        }
+        /* NG+ modal gerido por fix-final.js + ng-plus-v4.js */
 
         /* Botão de classes no menu */
         #v25-class-btn { animation: none !important; }
 
         /* Modal de classes v25 */
+        #v25-class-modal { display: none !important; }
         #v25-class-modal.active {
           display: flex !important;
-        }
-        #v25-class-modal:not(.active) {
-          display: none !important;
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 9999 !important;
+          align-items: center !important;
+          justify-content: center !important;
         }
         #v25-class-content::-webkit-scrollbar { display: none; }
 

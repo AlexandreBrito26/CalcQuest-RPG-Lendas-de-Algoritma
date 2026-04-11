@@ -15,9 +15,10 @@
   // ── Aguarda rpg estar pronto ──────────────────────────────────
   function waitForRpg(cb, tries) {
     tries = tries || 0;
-    if (window.rpg && typeof rpg.save === 'function') { cb(); return; }
-    if (tries > 200) { console.warn('[MegaPatch] rpg não encontrado, abortando.'); return; }
-    setTimeout(function() { waitForRpg(cb, tries + 1); }, 50);
+    var r = (typeof rpg !== 'undefined') ? rpg : window.rpg;
+    if (r && typeof r.save === 'function' && typeof r.killMonster === 'function') { cb(); return; }
+    if (tries > 300) { console.warn('[MegaPatch] rpg não encontrado, abortando.'); return; }
+    setTimeout(function() { waitForRpg(cb, tries + 1); }, 100);
   }
 
   waitForRpg(function() {
