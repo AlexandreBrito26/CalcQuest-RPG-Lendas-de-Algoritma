@@ -2091,6 +2091,7 @@
           <div id="acc-mapa" class="acc-sub">
             <button onclick="openMap()"     class="sub-pill" style="border-color:rgba(99,102,241,0.4);color:#818cf8;"><i data-lucide="map-pin" class="w-3 h-3"></i><span>Mundos</span></button>
             <button onclick="openPortals()" class="sub-pill" style="border-color:rgba(139,92,246,0.4);color:#a78bfa;"><i data-lucide="globe" class="w-3 h-3"></i><span>Portais</span></button>
+            <button id="mp-menu-btn" onclick="window.mpOpen && window.mpOpen()" class="sub-pill" style="border-color:rgba(124,58,237,0.5);color:#a78bfa;"><i data-lucide="users" class="w-3 h-3"></i><span>Co-op</span></button>
             <button onclick="openSettings()" class="sub-pill" style="border-color:rgba(113,113,122,0.4);color:#a1a1aa;"><i data-lucide="settings" class="w-3 h-3"></i><span>Sistema</span></button>
             <button onclick="openChangelog()" class="sub-pill" style="border-color:rgba(168,85,247,0.4);color:#c084fc;"><i data-lucide="scroll-text" class="w-3 h-3"></i><span>Changelog</span></button>
           </div>
@@ -3284,10 +3285,22 @@
   <script src="modules/prestige-multibuy.js"></script>
   <script src="modules/profile-animations.js"></script>
   <script src="modules/profile-vip-fix.js"></script>
-  <script src="modules/quick-menu.js"></script>
+  <!-- quick-menu desativado: Acesso Rápido e Sugestões removidos -->
+<!-- <script src="modules/quick-menu.js"></script> -->
   <script src="modules/combo-mastery.js"></script>
   <script src="modules/arena-challenges.js"></script>
   <script src="modules/relic-forge.js"></script>
+  <script src="modules/late-game-content.js"></script>
+  <script src="modules/world-expansion.js"></script>
+  <script src="modules/boss-dialogues-fix.js"></script>
+  <script src="modules/world-map-rewrite.js"></script>
+
+  <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- Módulo Co-op (após game.js e outros módulos) -->
+<script src="modules/multiplayer.js"></script>
     <script>
     // TAB SYSTEM
     function switchTab(tab) {
