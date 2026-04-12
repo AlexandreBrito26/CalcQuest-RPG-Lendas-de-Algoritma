@@ -271,32 +271,8 @@
       'box-shadow:0 0 10px ' + tier.glow + ';">' + tier.badge + '</span>';
   }
 
-  // ── Botão "Loja VIP" no perfil ────────────────────────────────
-  function injectVipShopButton() {
-    if (document.getElementById('vip-shop-btn')) return;
-    var medalsContainer = document.getElementById('medals-container');
-    if (!medalsContainer) return;
-
-    var btn = document.createElement('button');
-    btn.id = 'vip-shop-btn';
-    btn.onclick = openVipShop;
-    btn.style.cssText = [
-      'width:100%;margin-top:10px;padding:8px;',
-      'font-family:Orbitron,sans-serif;font-size:8px;font-weight:900;letter-spacing:.1em;',
-      'text-transform:uppercase;border-radius:10px;cursor:pointer;',
-      'background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(167,139,250,0.15));',
-      'border:1px solid rgba(251,191,36,0.4);',
-      'color:#fbbf24;',
-      'box-shadow:0 0 12px rgba(251,191,36,0.2);',
-      'transition:all .2s;',
-    ].join('');
-    btn.textContent = '👑 Loja VIP & Cosméticos';
-    btn.onmouseenter = function () { this.style.boxShadow = '0 0 20px rgba(251,191,36,0.4)'; };
-    btn.onmouseleave = function () { this.style.boxShadow = '0 0 12px rgba(251,191,36,0.2)'; };
-
-    var parent = medalsContainer.parentElement || medalsContainer;
-    parent.appendChild(btn);
-  }
+  // ── Botão "Loja VIP" removido — já existe LOJA VIP OMNIVERSAL ──
+  function injectVipShopButton() { /* desativado — usar LOJA VIP OMNIVERSAL */ }
 
   // ── Modal da Loja VIP ─────────────────────────────────────────
   function openVipShop() {
