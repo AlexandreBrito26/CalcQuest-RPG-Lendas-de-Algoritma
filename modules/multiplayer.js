@@ -171,9 +171,10 @@ var MP_CONFIG = {
     if (!snap.exists()) { showToast("❌ Sala não encontrada."); return; }
 
     const data = snap.val();
-    // p2 pode ser false (sala vazia) ou um objeto (sala cheia)
-    if (data.p2 && typeof data.p2 === "object" && data.p2.online) {
-      showToast("❌ Sala cheia.");
+    // Bloquear só se p2 for objeto E online:true (slot genuinamente ocupado)
+    const p2Occupied = data.p2 && typeof data.p2 === "object" && data.p2.online === true;
+    if (p2Occupied) {
+      showToast("❌ Sala cheia — já tem um P2 conectado.");
       return;
     }
 
@@ -382,6 +383,7 @@ var MP_CONFIG = {
   function leaveRoom() {
     if (MP.roomRef && MP.listener) {
       MP.roomRef.off("value", MP.listener);
+      // Marcar online:false para liberar o slot para próxima pessoa
       MP.roomRef.child(MP.playerId + "/online").set(false);
     }
     MP.enabled   = false;
