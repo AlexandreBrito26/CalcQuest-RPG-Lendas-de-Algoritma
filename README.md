@@ -4,7 +4,7 @@
 
 > *"E se uma simples calculadora pudesse evoluir para um RPG completo?"*
 
-[![Jogar Agora](https://img.shields.io/badge/🎮_JOGAR_AGORA-netlify-00C7B7?style=for-the-badge)](https://calcquest-rpg.netlify.app/)
+[![Jogar Agora](https://img.shields.io/badge/🎮_JOGAR_AGORA-vercel-000000?style=for-the-badge)](https://calc-quest-rpg-lendas-de-algoritma.vercel.app/)
 [![Versão](https://img.shields.io/badge/versão-v27.1-a855f7?style=for-the-badge)]()
 [![Módulos](https://img.shields.io/badge/módulos-67+-c9a84c?style=for-the-badge)]()
 [![Licença](https://img.shields.io/badge/licença-Open_Source-52525b?style=for-the-badge)]()
@@ -419,6 +419,6 @@ Projeto open-source para estudo e experimentação em Game Dev + Web Development
 
 **Feito com ⚔️ e Vanilla JS por um desenvolvedor que quis demais de uma calculadora**
 
-[🎮 Jogar Agora](https://calcquest-rpg.netlify.app/) · [📋 Changelog Completo](CHANGELOG.html)
+[🎮 Jogar Agora](https://calc-quest-rpg-lendas-de-algoritma.vercel.app/) · [📋 Changelog Completo](CHANGELOG.html)
 
 </div>
