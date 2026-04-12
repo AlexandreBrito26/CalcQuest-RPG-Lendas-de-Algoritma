@@ -171,25 +171,32 @@ var MP_CONFIG = {
     if (!snap.exists()) { showToast("❌ Sala não encontrada."); return; }
 
     const data = snap.val();
-    if (data.p2) { showToast("❌ Sala cheia."); return; }
+    // p2 pode ser false (sala vazia) ou um objeto (sala cheia)
+    if (data.p2 && typeof data.p2 === "object" && data.p2.online) {
+      showToast("❌ Sala cheia.");
+      return;
+    }
 
     const heroName = document.getElementById("profile-hero-name")?.value || rpg.heroName || "Herói 2";
+    const heroMaxHp = typeof rpg.getMaxHp === "function" ? rpg.getMaxHp() : (rpg.heroMaxHp || rpg.heroHp || 100);
 
     MP.roomCode  = code;
     MP.playerId  = "p2";
     MP.roomRef   = ref;
     MP._killLock = false;
 
-    // Sincronizar monstro local com o da sala
-    rpg.monster = Object.assign({}, data.monster);
-    rpg.isBossFight = data.isBoss || false;
+    // Sincronizar monstro local com o da sala (se tiver monstro real)
+    if (data.monster && data.monster.id !== "waiting") {
+      rpg.monster = Object.assign({}, data.monster);
+      rpg.isBossFight = data.isBoss || false;
+    }
 
     // Registrar P2 na sala
     await ref.child("p2").set({
       name: heroName,
       dmg:  0,
-      hp:   rpg.heroHp,
-      maxHp: rpg.getMaxHp(),
+      hp:   rpg.heroHp || 100,
+      maxHp: heroMaxHp,
       online: true,
     });
 
@@ -199,13 +206,13 @@ var MP_CONFIG = {
 
     // Atualizar UI de combate com o monstro da sala
     if (rpg.inCombat) {
-      rpg.updateHpBars();
+      if (typeof rpg.updateHpBars === "function") rpg.updateHpBars();
       const nameEl = document.getElementById("monster-name");
-      if (nameEl) nameEl.innerText = rpg.monster.name;
+      if (nameEl && rpg.monster) nameEl.innerText = rpg.monster.name;
     }
 
     showToast("🎮 Conectado à sala " + code + "!", 4000);
-    closeModal("mp-modal");
+    closeMpModal();
   }
 
   // ── 7. Listener principal — ouve mudanças na sala ──
